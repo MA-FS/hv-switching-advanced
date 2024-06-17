@@ -1,0 +1,318 @@
+@font-face {
+  font-family: 'Titillium';
+  src: url('/public/TitilliumWeb-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  background-color: #f4f4f4;
+  font-family: 'Titillium', sans-serif;
+}
+
+header {
+  background-color: white;  /* Change header background to white */
+  color: #4d0f4a;  /* American Purple for text */
+  padding: 1rem;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  height: 70px;  /* Increase logo size */
+  margin-right: 15px;
+}
+
+.title {
+  font-size: 4rem;
+  color: #ba942e;  /* Gold for title text */
+  margin: 0;
+}
+
+.container {
+  background: white;
+  padding: 1rem;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem; /* Add margin to the bottom of the container */
+}
+
+/* Styles for the form section to make it look official */
+.info-container {
+  background: #fff;
+  border: 2px solid #ba942e; /* Gold border */
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.info-container label {
+  font-weight: bold;
+  color: #4d0f4a; /* American Purple */
+}
+
+.info-container .form-control {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  padding: 0.5rem;
+  font-size: 1.1rem; /* Slightly larger font size */
+}
+
+.compact-field .form-control {
+  width: 100%;
+  max-width: 250px; /* Adjust width as necessary */
+}
+
+.separator {
+  border: 0;
+  height: 2px;
+  background: #ccc; /* Adjust color as needed */
+  margin: 20px 0;
+}
+
+.table-container {
+  margin-top: 2rem; /* Add margin to the top of the table container */
+  padding-top: 20px;
+}
+
+table {
+  width: 100%;
+}
+
+table, th, td {
+  border: 1px solid #ddd;
+}
+
+th, td {
+  padding: 0.5rem;
+}
+
+/* More specific rule to remove default styling of inputs inside the table */
+.table-container table input {
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  font-family: 'Titillium', sans-serif;
+  border-radius: 0; /* Remove rounded corners */
+  outline: none; /* Remove outline on focus */
+}
+
+button {
+  margin-top: 1rem;
+  background-color: #4d0f4a;  /* American Purple */
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ba942e;  /* Gold */
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+footer {
+  margin-top: 2rem;
+}
+
+/* Make columns resizable */
+table th, table td {
+  resize: horizontal;
+  overflow: auto;
+}
+
+.d-flex {
+  display: flex;
+  align-items: center;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.ml-3 {
+  margin-left: 1rem;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+}
+
+.btn-info:hover {
+  background-color: #138496;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+/* Flexbox for responsive layout */
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.flex-container .col-md-6 {
+  flex: 1 1 45%;
+  min-width: 200px;
+}
+
+.flex-container .col-md-12 {
+  flex: 1 1 100%;
+}
+
+.flex-container .col-md-4 {
+  flex: 1 1 30%;
+  min-width: 150px;
+}
+
+.flex-container .col-md-3 {
+  flex: 1 1 22%;
+  min-width: 150px;
+}
+
+/* Column width definitions */
+.item-column {
+  width: 5%;
+}
+
+.col-0 {
+  width: 20%;
+}
+
+.col-1 {
+  width: 10%;
+}
+
+.col-2 {
+  width: 10%;
+}
+
+.col-3 {
+  width: 10%;
+}
+
+.col-4 {
+  width: 25%;
+}
+
+.col-5 {
+  width: 10%;
+}
+
+.col-6 {
+  width: 10%;
+}
+
+.delete-column {
+  width: 5%;
+}
+
+.program-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.program-button,
+.rename-button,
+.delete-button {
+  grid-column: span 1;
+}
+
+.program-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.program-button {
+  flex: 1;
+}
+
+.rename-button,
+.delete-button {
+  margin-left: 10px;
+}
+
+.program-card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.program-card .program-name {
+  flex: 1;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  text-align: center;
+  margin-right: 500px;
+}
+
+.program-card .program-actions {
+  display: flex;
+  gap: 10px;
+}
