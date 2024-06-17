@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const ItemType = 'ROW';
 
@@ -96,14 +98,15 @@ const ProgramTable = ({ tableData, setTableData }) => {
     setRows(newRows);
   };
 
-  const exportToCSV = () => {
-    const csvData = rows.map(row => row.join(',')).join('\n');
-    const csvBlob = new Blob([csvData], { type: 'text/csv' });
-    const csvUrl = URL.createObjectURL(csvBlob);
-    const csvLink = document.createElement('a');
-    csvLink.href = csvUrl;
-    csvLink.download = 'switching_program.csv';
-    csvLink.click();
+  const exportToPDF = () => {
+    const input = document.getElementById('table-container');
+    html2canvas(input)
+      .then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF();
+        pdf.addImage(imgData, 'PNG', 10, 10);
+        pdf.save('switching_program.pdf');
+      });
   };
 
   return (
@@ -111,7 +114,7 @@ const ProgramTable = ({ tableData, setTableData }) => {
       <div className="header-section">
         {/* Header content here */}
       </div>
-      <div className="table-container">
+      <div id="table-container" className="table-container">
         <table className="table table-bordered">
           <thead>
             <tr>
@@ -135,7 +138,7 @@ const ProgramTable = ({ tableData, setTableData }) => {
         </table>
       </div>
       <button className="btn btn-success" onClick={addRow}>Add Row</button>
-      <button className="btn btn-primary" onClick={exportToCSV}>Export to CSV</button>
+      <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
     </div>
   );
 };

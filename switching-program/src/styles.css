@@ -115,6 +115,7 @@ button {
 
 button:hover {
   background-color: #ba942e;  /* Gold */
+  color: white; /* Keep the text color white */
 }
 
 .btn-warning {
@@ -124,6 +125,7 @@ button:hover {
 
 .btn-warning:hover {
   background-color: #e0a800;
+  color: white; /* Keep the text color white */
 }
 
 .btn-secondary {
@@ -131,8 +133,8 @@ button:hover {
   color: white;
 }
 
-.btn-secondary:hover {
-  background-color: #5a6268;
+.btn-secondary.rename-button:hover {
+  color: white !important; /* Keep the text color white */
 }
 
 footer {
@@ -275,6 +277,10 @@ table th, table td {
   grid-column: span 1;
 }
 
+.rename-button:hover {
+  color: white; /* Keep the text color white */
+}
+
 .program-row {
   display: flex;
   align-items: center;
@@ -310,6 +316,11 @@ table th, table td {
   border-radius: 5px;
   text-align: center;
   margin-right: 500px;
+}
+
+.program-card .program-name:hover {
+  background-color: #0056b3; /* Darker shade of blue */
+  color: white; /* Keep the text color white */
 }
 
 .program-card .program-actions {
