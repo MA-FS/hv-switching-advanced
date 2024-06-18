@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import localforage from 'localforage';
+import Header from './components/Header';
 import InfoForm from './components/InfoForm';
 import ProgramTable from './components/ProgramTable';
+import Footer from './components/Footer';
 import DnDContext from './DnDContext'; // Import the DnDContext
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
@@ -116,6 +118,7 @@ const App = () => {
 
   return (
     <DnDContext>
+      <Header />
       <div className="container my-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4>Current Program: {currentProgram}</h4>
@@ -125,7 +128,7 @@ const App = () => {
         </div>
         <InfoForm formData={formData} handleChange={handleChange} />
         <hr className="separator" />
-        <ProgramTable tableData={tableData} setTableData={handleTableDataChange} />
+        <ProgramTable tableData={tableData} setTableData={handleTableDataChange} formData={formData} />
         <div className="d-flex justify-content-between mt-3">
           <input
             type="text"
@@ -169,6 +172,7 @@ const App = () => {
           ))}
         </div>
       </div>
+      <Footer />
     </DnDContext>
   );
 };

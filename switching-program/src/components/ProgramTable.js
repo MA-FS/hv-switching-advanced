@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import 'jspdf-autotable';
+import redX from './red_x.png'; // Ensure the path is correct
 
 const ItemType = 'ROW';
 
 const DraggableRow = ({ row, index, moveRow, handleInputChange, deleteRow }) => {
   const ref = React.useRef(null);
-  
+
   const [, drop] = useDrop({
     accept: ItemType,
     hover(item, monitor) {
@@ -51,16 +52,14 @@ const DraggableRow = ({ row, index, moveRow, handleInputChange, deleteRow }) => 
       ))}
       <td className="delete-column">
         <button className="btn btn-link text-danger p-0" onClick={() => deleteRow(index)}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" className="bi bi-x-circle" viewBox="0 0 16 16">
-            <path d="M8 1a7 7 0 1 1-4.95 12.03A7 7 0 0 1 8 1zM4.646 4.646a.5.5 0 0 0-.708.708L7.293 8 3.938 11.354a.5.5 0 0 0 .708.708L8 8.707l3.354 3.354a.5.5 0 0 0 .708-.708L8.707 8l3.355-3.354a.5.5 0 0 0-.708-.708L8 7.293 4.646 3.938a.5.5 0 0 0-.708 0z"/>
-          </svg>
+          <img src={redX} alt="Delete" width="16" height="16" />
         </button>
       </td>
     </tr>
   );
 };
 
-const ProgramTable = ({ tableData, setTableData }) => {
+const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [rows, setRows] = useState(tableData);
   const [columns] = useState([
     'Location', 'Volts', 'Type', 'Identity', 'Instruction', 'Time', 'Witness'
@@ -76,6 +75,15 @@ const ProgramTable = ({ tableData, setTableData }) => {
 
   const addRow = () => {
     setRows([...rows, Array(columns.length).fill('')]);
+  };
+
+  const addReverseSection = () => {
+    const newRows = [
+      Array(columns.length).fill(''),
+      ['', '', '', '', <b><u>REVERSE</u></b>, '', ''],
+      Array(columns.length).fill(''),
+    ];
+    setRows([...rows, ...newRows]);
   };
 
   const handleInputChange = (e, rowIndex, colIndex) => {
@@ -99,14 +107,34 @@ const ProgramTable = ({ tableData, setTableData }) => {
   };
 
   const exportToPDF = () => {
-    const input = document.getElementById('table-container');
-    html2canvas(input)
-      .then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF();
-        pdf.addImage(imgData, 'PNG', 10, 10);
-        pdf.save('switching_program.pdf');
-      });
+    const doc = new jsPDF('landscape');
+
+    // Add form data to the PDF
+    const formDataText = `
+      Work: ${formData.work} | Site: ${formData.site} | Procedure Permit No: ${formData.permitNo} | Reference Drawing: ${formData.referenceDrawing} | Program No: ${formData.programNo}
+      Date: ${formData.date} | Prepared by: ${formData.preparedBy} | Time: ${formData.time} | Switcher: ${formData.switcher} | Checked By: ${formData.checkedBy} | Witness: ${formData.witness}
+    `;
+    doc.setFontSize(10);
+    doc.text(formDataText, 10, 10);
+
+    // Convert rows data for autoTable
+    const tableRows = rows.map((row, index) => [index + 1, ...row]);
+
+    doc.autoTable({
+      head: [['Item', ...columns]],
+      body: tableRows,
+      startY: 20,
+      theme: 'grid',
+      margin: { top: 20 },
+      didDrawPage: function (data) {
+        // Footer with page count
+        let pageCount = doc.internal.getNumberOfPages();
+        doc.setFontSize(10);
+        doc.text(`Page ${data.pageNumber} of ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
+      },
+    });
+
+    doc.save('switching_program.pdf');
   };
 
   return (
@@ -120,7 +148,7 @@ const ProgramTable = ({ tableData, setTableData }) => {
             <tr>
               <th className="item-column">Item</th>
               {columns.map((col, index) => <th key={index} className={`col-${index}`}>{col}</th>)}
-              <th className="delete-column">Delete</th> {/* Add a column header for delete button */}
+              <th className="delete-column">Delete</th>
             </tr>
           </thead>
           <tbody>
@@ -138,6 +166,7 @@ const ProgramTable = ({ tableData, setTableData }) => {
         </table>
       </div>
       <button className="btn btn-success" onClick={addRow}>Add Row</button>
+      <button className="btn btn-secondary ml-2" onClick={addReverseSection}>Reverse</button>
       <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
     </div>
   );
