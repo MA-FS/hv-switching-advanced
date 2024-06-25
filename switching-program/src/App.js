@@ -4,7 +4,9 @@ import Header from './components/Header';
 import InfoForm from './components/InfoForm';
 import ProgramTable from './components/ProgramTable';
 import Footer from './components/Footer';
-import DnDContext from './DnDContext'; // Import the DnDContext
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import SaveConfirmation from './components/SaveConfirmation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
 
@@ -16,6 +18,7 @@ const App = () => {
   const [programs, setPrograms] = useState({});
   const [currentProgramName, setCurrentProgramName] = useState('');
   const [currentProgram, setCurrentProgram] = useState('');
+  const [saveConfirmation, setSaveConfirmation] = useState(false);
 
   useEffect(() => {
     localforage.getItem('programs').then(savedPrograms => {
@@ -58,7 +61,19 @@ const App = () => {
       alert('No program is currently loaded.');
       return;
     }
-    setPrograms({ ...programs, [currentProgram]: { formData, tableData } });
+    
+    const serializedTableData = JSON.parse(JSON.stringify(tableData));
+    
+    setPrograms(prevPrograms => ({
+      ...prevPrograms,
+      [currentProgram]: { formData, tableData: serializedTableData }
+    }));
+
+    setSaveConfirmation(true);
+
+    setTimeout(() => {
+      setSaveConfirmation(false);
+    }, 3000);
   };
 
   const handleLoadProgram = (programName) => {
@@ -117,7 +132,7 @@ const App = () => {
   };
 
   return (
-    <DnDContext>
+    <DndProvider backend={HTML5Backend}>
       <Header />
       <div className="container my-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -173,7 +188,8 @@ const App = () => {
         </div>
       </div>
       <Footer />
-    </DnDContext>
+      <SaveConfirmation show={saveConfirmation} />
+    </DndProvider>
   );
 };
 
