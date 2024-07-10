@@ -105,12 +105,14 @@ th, td {
 }
 
 button {
-  margin-top: 1rem;
+  margin-top: 0;
   background-color: #4d0f4a;  /* American Purple */
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 button:hover {
@@ -129,14 +131,14 @@ button:hover {
 }
 
 .btn-secondary {
-  background-color: #4D0F4A;
-  border-color: #4D0F4A;
+  background-color: #6c757d;
+  border-color: #6c757d;
   color: #FFFFFF;
 }
 
 .btn-secondary:hover, .btn-secondary:focus {
-  background-color: #6A1466;
-  border-color: #6A1466;
+  background-color: #5a6268;
+  border-color: #5a6268;
   color: #FFFFFF;
 }
 
@@ -412,4 +414,19 @@ table th, table td {
   10% { opacity: 1; }
   90% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.button-container button {
+  flex: 1 1 auto;
+  min-width: 120px;
+  margin: 0;
+  padding: 10px 15px;
+  font-size: 14px;
 }

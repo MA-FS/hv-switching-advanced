@@ -386,17 +386,17 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           </tbody>
         </table>
       </div>
-      <div>
+      <div className="button-container">
         <button className="btn btn-success" onClick={addRow}>Add Row</button>
-        <button className="btn btn-info ml-2" onClick={copyFromAbove}>Copy From Above</button>
+        <button className="btn btn-info" onClick={copyFromAbove}>Copy From Above</button>
         <button 
-          className="btn btn-secondary ml-2" 
+          className="btn btn-secondary"
           onClick={addReverseSection}
           disabled={hasReverseSection}
         >
           Reverse
         </button>
-        <button className="btn btn-primary ml-2" onClick={exportToPDF}>Export to PDF</button>
+        <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
       </div>
     </div>
   );
