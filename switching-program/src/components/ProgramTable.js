@@ -219,10 +219,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     img.onload = function() {
       doc.addImage(img, 'PNG', margin, margin, logoWidth, logoHeight);
 
-      // Add title
+      // Add title with dynamic program number
       doc.setFontSize(18);
       doc.setTextColor(186, 148, 46); // Gold color
-      doc.text('Switching Program', pageWidth / 2, margin + 5, { align: 'center' });
+      doc.text(`Switching Program ${formData.programNo}`, pageWidth / 2, margin + 5, { align: 'center' });
 
       // Add form data
       doc.setFontSize(10);
