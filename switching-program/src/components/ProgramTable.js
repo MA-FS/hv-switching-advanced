@@ -14,16 +14,24 @@ const DraggableRow = ({ row, index, moveRow, handleInputChange, deleteRow, itemN
   const [, drop] = useDrop({
     accept: ItemType,
     hover(item, monitor) {
-      if (item.index !== index) {
-        moveRow(item.index, index);
-        item.index = index;
+      if (!ref.current) {
+        return;
       }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      moveRow(dragIndex, hoverIndex);
+      item.index = hoverIndex;
     },
   });
 
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
-    item: { type: ItemType, index },
+    item: () => ({ type: ItemType, index }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -126,6 +134,26 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setRows([...rows, newRow]);
   };
 
+  const copyFromAbove = () => {
+    if (rows.length === 0) {
+      addRow();
+      return;
+    }
+
+    const lastRow = rows[rows.length - 1];
+    const newRow = [...lastRow];
+    
+    // Copy only specific columns
+    const columnsToCopy = [0, 1, 2, 3]; // Indices for Location, Volts, Type, Identity
+    for (let i = 0; i < newRow.length; i++) {
+      if (!columnsToCopy.includes(i)) {
+        newRow[i] = '';
+      }
+    }
+
+    setRows([...rows, newRow]);
+  };
+
   const addReverseSection = () => {
     if (!hasReverseSection) {
       const newRows = [
@@ -139,17 +167,29 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   const handleInputChange = (e, rowIndex, colIndex) => {
-    const newRows = rows.map((row, rIdx) => (
-      rIdx === rowIndex ? row.map((col, cIdx) => (cIdx === colIndex ? e.target.value : col)) : row
-    ));
+    const newValue = e.target.value;
+    const newRows = rows.map((row, rIdx) => {
+      if (rIdx === rowIndex) {
+        const updatedRow = [...row];
+        if (colIndex === 2) { // Index 2 corresponds to the "Type" column
+          updatedRow[colIndex] = newValue.toUpperCase();
+        } else {
+          updatedRow[colIndex] = newValue;
+        }
+        return updatedRow;
+      }
+      return row;
+    });
     setRows(newRows);
   };
 
   const moveRow = (fromIndex, toIndex) => {
-    const updatedRows = [...rows];
-    const [movedRow] = updatedRows.splice(fromIndex, 1);
-    updatedRows.splice(toIndex, 0, movedRow);
-    setRows(updatedRows);
+    setRows((prevRows) => {
+      const updatedRows = [...prevRows];
+      const [movedRow] = updatedRows.splice(fromIndex, 1);
+      updatedRows.splice(toIndex, 0, movedRow);
+      return updatedRows;
+    });
   };
 
   const deleteRow = (rowIndex) => {
@@ -309,6 +349,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                   onResize={onResize(index)}
                 >
                   {col}
+                  {index === 2 && <span title="Uppercase only" className="ml-1">🔠</span>}
                 </ResizableHeader>
               ))}
               <th className="delete-column">Delete</th>
@@ -345,15 +386,18 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           </tbody>
         </table>
       </div>
-      <button className="btn btn-success" onClick={addRow}>Add Row</button>
-      <button 
-        className="btn btn-secondary ml-2" 
-        onClick={addReverseSection}
-        disabled={hasReverseSection}
-      >
-        Reverse
-      </button>
-      <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
+      <div>
+        <button className="btn btn-success" onClick={addRow}>Add Row</button>
+        <button className="btn btn-info ml-2" onClick={copyFromAbove}>Copy From Above</button>
+        <button 
+          className="btn btn-secondary ml-2" 
+          onClick={addReverseSection}
+          disabled={hasReverseSection}
+        >
+          Reverse
+        </button>
+        <button className="btn btn-primary ml-2" onClick={exportToPDF}>Export to PDF</button>
+      </div>
     </div>
   );
 };
