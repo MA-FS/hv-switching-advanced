@@ -321,6 +321,15 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           7: { cellWidth: 30 },
         },
         didDrawPage: function(data) {
+          // Add logo and title to each page
+          doc.addImage(img, 'PNG', margin, margin, logoWidth, logoHeight);
+          doc.setFontSize(18);
+          doc.setTextColor(186, 148, 46); // Gold color
+          doc.text(`Switching Program ${formData.programNo}`, pageWidth / 2, margin + 5, { align: 'center' });
+  
+          // Ensure enough space between title and table
+          data.settings.margin.top = margin + logoHeight + 20;
+  
           // Footer
           doc.setFontSize(8);
           doc.text(`Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
