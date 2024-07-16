@@ -2,6 +2,7 @@
   "name": "switching-program",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://ma-fs.github.io/switching-program",
   "dependencies": {
     "@jridgewell/sourcemap-codec": "^1.4.15",
     "@testing-library/jest-dom": "^5.17.0",
@@ -10,6 +11,7 @@
     "bootstrap": "^3.4.1",
     "domexception": "^4.0.0",
     "fsevents": "^2.3.3",
+    "gh-pages": "^6.1.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
@@ -33,7 +35,9 @@
     "start": "NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
