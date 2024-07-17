@@ -8,7 +8,7 @@ import redX from './red_x.png'; // Ensure the path is correct
 
 const ItemType = 'ROW';
 
-const DraggableRow = ({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths }) => {
   const ref = React.useRef(null);
 
   const [, drop] = useDrop({
@@ -21,6 +21,18 @@ const DraggableRow = ({ row, index, moveRow, handleInputChange, deleteRow, itemN
       const hoverIndex = index;
 
       if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      const clientOffset = monitor.getClientOffset();
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
         return;
       }
 
@@ -70,7 +82,7 @@ const DraggableRow = ({ row, index, moveRow, handleInputChange, deleteRow, itemN
       </td>
     </tr>
   );
-};
+});
 
 const ResizableHeader = ({ children, width, onResize }) => {
   return (

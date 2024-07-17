@@ -2,7 +2,7 @@
   "name": "switching-program",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ma-fs.github.io/PMV-HV-SWITCHING-PROGRAMS/",
+  "homepage": "https://ma-fs.github.io/PMV-HV-Switching-Programs/",
   "dependencies": {
     "@jridgewell/sourcemap-codec": "^1.4.15",
     "@testing-library/jest-dom": "^5.17.0",
