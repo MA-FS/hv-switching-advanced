@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { Resizable } from 'react-resizable';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import 'react-resizable/css/styles.css';
 import redX from './red_x.png'; // Ensure the path is correct
+import { debounce } from 'lodash';
 
 const ItemType = 'ROW';
 
@@ -195,14 +196,17 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setRows(newRows);
   };
 
-  const moveRow = (fromIndex, toIndex) => {
-    setRows((prevRows) => {
-      const updatedRows = [...prevRows];
-      const [movedRow] = updatedRows.splice(fromIndex, 1);
-      updatedRows.splice(toIndex, 0, movedRow);
-      return updatedRows;
-    });
-  };
+  const moveRow = useCallback(
+    debounce((fromIndex, toIndex) => {
+      setRows((prevRows) => {
+        const updatedRows = [...prevRows];
+        const [movedRow] = updatedRows.splice(fromIndex, 1);
+        updatedRows.splice(toIndex, 0, movedRow);
+        return updatedRows;
+      });
+    }, 100),
+    []
+  );
 
   const deleteRow = (rowIndex) => {
     const newRows = rows.filter((_, index) => index !== rowIndex);
