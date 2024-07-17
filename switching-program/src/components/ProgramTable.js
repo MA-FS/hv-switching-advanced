@@ -1,20 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useDrag, useDrop, DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Resizable } from 'react-resizable';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import 'react-resizable/css/styles.css';
 import redX from './red_x.png'; // Ensure the path is correct
-import { debounce } from 'lodash';
 
 const ItemType = 'ROW';
 
 const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths }) => {
-  const ref = React.useRef(null);
+  const ref = useRef(null);
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemType,
+    item: () => ({ index, originalIndex: index }),
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+    end: (item, monitor) => {
+      const { index: originalIndex } = item;
+      const didDrop = monitor.didDrop();
+      if (!didDrop) {
+        moveRow(item.index, originalIndex);
+      }
+    },
+  });
 
   const [, drop] = useDrop({
     accept: ItemType,
-    hover(item, monitor) {
+    hover: (item, monitor) => {
       if (!ref.current) {
         return;
       }
@@ -42,14 +56,6 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     },
   });
 
-  const [{ isDragging }, drag] = useDrag({
-    type: ItemType,
-    item: () => ({ type: ItemType, index }),
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
   drag(drop(ref));
 
   const isReverseRow = row[4] === 'REVERSE';
@@ -57,7 +63,10 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
   return (
     <tr 
       ref={ref} 
-      style={{ opacity: isDragging ? 0.5 : 1 }}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        cursor: 'move',
+      }}
       className={isReverseSection ? 'reverse-section' : ''}
     >
       <td className="item-column">{itemNumber}</td>
@@ -100,6 +109,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
 
 const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [rows, setRows] = useState(tableData);
+  const [isDragging, setIsDragging] = useState(false);
   const [lastNumberedIndex, setLastNumberedIndex] = useState(-1);
   const [hasReverseSection, setHasReverseSection] = useState(false);
   const [columns] = useState([
@@ -196,17 +206,23 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setRows(newRows);
   };
 
-  const moveRow = useCallback(
-    debounce((fromIndex, toIndex) => {
-      setRows((prevRows) => {
-        const updatedRows = [...prevRows];
-        const [movedRow] = updatedRows.splice(fromIndex, 1);
-        updatedRows.splice(toIndex, 0, movedRow);
-        return updatedRows;
-      });
-    }, 100),
-    []
-  );
+  const moveRow = useCallback((dragIndex, hoverIndex) => {
+    setRows((prevRows) => {
+      const newRows = [...prevRows];
+      const [removed] = newRows.splice(dragIndex, 1);
+      newRows.splice(hoverIndex, 0, removed);
+      return newRows;
+    });
+  }, []);
+
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    setTableData(rows);
+  }, [rows, setTableData]);
 
   const deleteRow = (rowIndex) => {
     const newRows = rows.filter((_, index) => index !== rowIndex);
@@ -358,71 +374,85 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   return (
-    <div className="spreadsheet-container p-3">
-      <div className="header-section">
-        {/* Header content here */}
-      </div>
-      <div id="table-container" className="table-container">
-        <table className="table table-bordered">
-          <thead>
-            <tr>
-              <th className="item-column">Item</th>
-              {columns.map((col, index) => (
-                <ResizableHeader
-                  key={index}
-                  width={columnWidths[index]}
-                  onResize={onResize(index)}
-                >
-                  {col}
-                </ResizableHeader>
-              ))}
-              <th className="delete-column">Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => {
-              let itemNumber = '';
-              const reverseIndex = rows.findIndex(isReverseRow);
-              if (index <= lastNumberedIndex) {
-                itemNumber = index + 1;
-              } else if (reverseIndex !== -1 && index > reverseIndex + 1) {
-                const numberedRowsAfterReverse = index - reverseIndex - 2;
-                itemNumber = lastNumberedIndex + 2 + numberedRowsAfterReverse;
-              }
-              
-              // Determine if this row is part of the reverse section
-              const isReverseSection = reverseIndex !== -1 && index >= reverseIndex - 1 && index < reverseIndex + 2;
-              
-              return (
-                <DraggableRow
-                  key={index}
-                  row={row}
-                  index={index}
-                  moveRow={moveRow}
-                  handleInputChange={handleInputChange}
-                  deleteRow={deleteRow}
-                  itemNumber={itemNumber}
-                  isReverseSection={isReverseSection}
-                  columnWidths={columnWidths}
-                />
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <div className="button-container">
-        <button className="btn btn-success" onClick={addRow}>Add Row</button>
-        <button className="btn btn-info" onClick={copyFromAbove}>Copy From Above</button>
-        <button 
-          className="btn btn-secondary"
-          onClick={addReverseSection}
-          disabled={hasReverseSection}
+    <DndProvider backend={HTML5Backend}>
+      <div 
+        className="spreadsheet-container p-3"
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="header-section">
+          {/* Header content here */}
+        </div>
+        <div 
+          id="table-container" 
+          className="table-container"
+          style={{ 
+            userSelect: isDragging ? 'none' : 'auto',
+            WebkitUserSelect: isDragging ? 'none' : 'auto',
+            MozUserSelect: isDragging ? 'none' : 'auto',
+          }}
         >
-          Reverse
-        </button>
-        <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
+          <table className="table table-bordered">
+            <thead>
+              <tr>
+                <th className="item-column">Item</th>
+                {columns.map((col, index) => (
+                  <ResizableHeader
+                    key={index}
+                    width={columnWidths[index]}
+                    onResize={onResize(index)}
+                  >
+                    {col}
+                  </ResizableHeader>
+                ))}
+                <th className="delete-column">Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => {
+                let itemNumber = '';
+                const reverseIndex = rows.findIndex(isReverseRow);
+                if (index <= lastNumberedIndex) {
+                  itemNumber = index + 1;
+                } else if (reverseIndex !== -1 && index > reverseIndex + 1) {
+                  const numberedRowsAfterReverse = index - reverseIndex - 2;
+                  itemNumber = lastNumberedIndex + 2 + numberedRowsAfterReverse;
+                }
+              
+                // Determine if this row is part of the reverse section
+                const isReverseSection = reverseIndex !== -1 && index >= reverseIndex - 1 && index < reverseIndex + 2;
+                
+                return (
+                  <DraggableRow
+                    key={`row-${index}`}
+                    row={row}
+                    index={index}
+                    moveRow={moveRow}
+                    handleInputChange={handleInputChange}
+                    deleteRow={deleteRow}
+                    itemNumber={itemNumber}
+                    isReverseSection={isReverseSection}
+                    columnWidths={columnWidths}
+                  />
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="button-container">
+          <button className="btn btn-success" onClick={addRow}>Add Row</button>
+          <button className="btn btn-info" onClick={copyFromAbove}>Copy From Above</button>
+          <button 
+            className="btn btn-secondary"
+            onClick={addReverseSection}
+            disabled={hasReverseSection}
+          >
+            Reverse
+          </button>
+          <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
+        </div>
       </div>
-    </div>
+    </DndProvider>
   );
 };
 
