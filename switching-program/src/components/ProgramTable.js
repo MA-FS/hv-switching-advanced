@@ -374,7 +374,6 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                   onResize={onResize(index)}
                 >
                   {col}
-                  {index === 2 && <span title="Uppercase only" className="ml-1">🔠</span>}
                 </ResizableHeader>
               ))}
               <th className="delete-column">Delete</th>
