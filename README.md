@@ -2,18 +2,58 @@
 
 This tool allows you to create, edit, and export high voltage switching programs in an intuitive spreadsheet-like interface.
 
-## Featuresnpm 
-- Add new rows dynamically
-- Drag and drop rows to reorder
-- Export the spreadsheet to PDF
+## Features
+- Dynamic row management: Add, delete, and reorder rows
+- Drag and drop functionality for easy row reordering
+- Resizable columns for customized view
+- Automatic item numbering
+- Reverse section support
+- Export to PDF with custom formatting
 - User-friendly and elegant design
 
 ## How to Use
+
 1. Clone the repository
-2. Open `index.html` in your browser
-3. Use the `Add Row` button to add new entries
-4. Reorder rows by dragging and dropping
-5. Export the spreadsheet to PDF using the `Export to PDF` button
+2. Install dependencies: `npm install`
+3. Start the application: `npm start`
+4. Open the application in your browser (usually at `http://localhost:3000`)
+
+### Creating a Switching Program
+
+1. Fill out the information form at the top of the page with relevant details.
+2. Use the table below to create your switching program:
+   - Click "Add Row" to add a new row to the table.
+   - Use "Copy From Above" to duplicate the last row (excluding certain fields).
+   - Click "Reverse" to add a reverse section (can only be done once per program).
+
+### Editing the Table
+
+- Click and drag column headers to resize them.
+- Click and drag rows to reorder them.
+- Use the delete button (red X) at the end of each row to remove it.
+- The "Type" column automatically converts input to uppercase.
+
+### Reverse Section
+
+- The "Reverse" button adds a special reverse section to your program.
+- This section includes a row before and after the "REVERSE" row.
+- Item numbering automatically adjusts for the reverse section.
+
+### Exporting to PDF
+
+1. Click the "Export to PDF" button.
+2. The PDF will be generated with the following features:
+   - Company logo and program title on each page
+   - Form data displayed at the top of the first page
+   - Table contents with appropriate formatting
+   - "REVERSE" text in bold and underlined
+   - Page numbers in the footer
+3. The PDF will be saved with a filename format: `preparedby_program_programno_date.pdf`
 
 ## Contributing
+
 Feel free to submit issues or pull requests. We welcome contributions to improve this tool.
+
+## License
+
+[Add your license information here]
