@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import SaveConfirmation from './components/SaveConfirmation';
+import ReadmeSplash from './components/ReadmeSplash';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
 
@@ -19,8 +20,16 @@ const App = () => {
   const [currentProgramName, setCurrentProgramName] = useState('');
   const [currentProgram, setCurrentProgram] = useState('');
   const [saveConfirmation, setSaveConfirmation] = useState(false);
+  const [showReadme, setShowReadme] = useState(false);
 
   useEffect(() => {
+    localforage.getItem('hasVisited').then(hasVisited => {
+      if (!hasVisited) {
+        setShowReadme(true);
+        localforage.setItem('hasVisited', true);
+      }
+    });
+
     localforage.getItem('programs').then(savedPrograms => {
       if (savedPrograms) setPrograms(savedPrograms);
     });
@@ -131,64 +140,78 @@ const App = () => {
     }
   };
 
+  const handleToggleReadme = () => {
+    setShowReadme(!showReadme);
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <Header />
-      <div className="container my-4">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4>Current Program: {currentProgram}</h4>
-          <button className="btn btn-primary ml-3" onClick={handleUpdateCurrentProgram}>
-            Save Current Program
-          </button>
+      <div className="container-fluid my-4">
+        <div className="header-container">
+          <div className="left-content">
+            <h4 className="mr-3">Current Program: {currentProgram}</h4>
+            <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
+              Save Current Program
+            </button>
+          </div>
+          <div className="right-content">
+            <button className="btn btn-info" onClick={handleToggleReadme}>
+              <i className="fas fa-question-circle"></i> View Readme
+            </button>
+          </div>
         </div>
-        <InfoForm formData={formData} handleChange={handleChange} />
-        <hr className="separator" />
-        <ProgramTable tableData={tableData} setTableData={handleTableDataChange} formData={formData} />
-        <div className="d-flex justify-content-between mt-3">
-          <input
-            type="text"
-            className="form-control mr-2"
-            placeholder="Enter program name"
-            value={currentProgramName}
-            onChange={(e) => setCurrentProgramName(e.target.value)}
-          />
-          <button className="btn btn-success mr-2" onClick={handleSaveProgram}>
-            Save Program
-          </button>
-          <button className="btn btn-warning" onClick={handleNewProgram}>
-            New Program
-          </button>
-        </div>
-        <div className="mt-3">
-          <h2 className="text-primary mb-3">Saved Programs</h2>
-          {Object.keys(programs).map(programName => (
-            <div className="program-card" key={programName}>
-              <div
-                className="program-name"
-                onClick={() => handleLoadProgram(programName)}
-              >
-                {programName}
-              </div>
-              <div className="program-actions">
-                <button
-                  className="btn btn-secondary rename-button"
-                  onClick={() => handleRenameProgram(programName)}
+        <div className="container">
+          <InfoForm formData={formData} handleChange={handleChange} />
+          <hr className="separator" />
+          <ProgramTable tableData={tableData} setTableData={handleTableDataChange} formData={formData} />
+          <div className="d-flex justify-content-between mt-3">
+            <input
+              type="text"
+              className="form-control mr-2"
+              placeholder="Enter program name"
+              value={currentProgramName}
+              onChange={(e) => setCurrentProgramName(e.target.value)}
+            />
+            <button className="btn btn-success mr-2" onClick={handleSaveProgram}>
+              Save Program
+            </button>
+            <button className="btn btn-warning" onClick={handleNewProgram}>
+              New Program
+            </button>
+          </div>
+          <div className="mt-3">
+            <h2 className="text-primary mb-3">Saved Programs</h2>
+            {Object.keys(programs).map(programName => (
+              <div className="program-card" key={programName}>
+                <div
+                  className="program-name"
+                  onClick={() => handleLoadProgram(programName)}
                 >
-                  Rename
-                </button>
-                <button
-                  className="btn btn-danger delete-button"
-                  onClick={() => handleDeleteProgram(programName)}
-                >
-                  Delete
-                </button>
+                  {programName}
+                </div>
+                <div className="program-actions">
+                  <button
+                    className="btn btn-secondary rename-button"
+                    onClick={() => handleRenameProgram(programName)}
+                  >
+                    Rename
+                  </button>
+                  <button
+                    className="btn btn-danger delete-button"
+                    onClick={() => handleDeleteProgram(programName)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
       <Footer />
       <SaveConfirmation show={saveConfirmation} />
+      <ReadmeSplash show={showReadme} onClose={() => setShowReadme(false)} />
     </DndProvider>
   );
 };
