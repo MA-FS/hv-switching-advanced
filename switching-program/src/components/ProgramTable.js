@@ -308,17 +308,25 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       const reverseIndex = rows.findIndex(row => row[4] === 'REVERSE');
 
       rows.forEach((row, index) => {
+        let formattedRow;
         if (reverseIndex !== -1) {
           if (index === reverseIndex - 1 || index === reverseIndex || index === reverseIndex + 1) {
-            tableRows.push(['', ...row]);
+            formattedRow = ['', ...row];
           } else if (index < reverseIndex) {
-            tableRows.push([itemNumber++, ...row]);
+            formattedRow = [itemNumber++, ...row];
           } else if (index > reverseIndex + 1) {
-            tableRows.push([itemNumber++, ...row]);
+            formattedRow = [itemNumber++, ...row];
           }
         } else {
-          tableRows.push([itemNumber++, ...row]);
+          formattedRow = [itemNumber++, ...row];
         }
+
+        // Check if this is the REVERSE row and format it
+        if (formattedRow[5] === 'REVERSE') {
+          formattedRow[5] = { content: 'REVERSE', styles: { fontStyle: 'bold', textColor: [0, 0, 0], decoration: 'underline' } };
+        }
+
+        tableRows.push(formattedRow);
       });
 
       // Add table
@@ -368,7 +376,16 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         },
       });
 
-      doc.save('switching_program.pdf');
+      // Create a custom filename with date
+      const preparedBy = formData.preparedBy || 'Unknown';
+      const programNo = formData.programNo || 'NoNumber';
+      const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      const sanitizedPreparedBy = preparedBy.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const sanitizedProgramNo = programNo.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const filename = `${sanitizedPreparedBy}_program_${sanitizedProgramNo}_${currentDate}.pdf`;
+
+      // Save the PDF with the custom filename
+      doc.save(filename);
     };
     img.src = logoUrl;
   };
