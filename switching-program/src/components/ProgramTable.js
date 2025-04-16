@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDrag, useDrop, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Resizable } from 'react-resizable';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import 'react-resizable/css/styles.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
@@ -354,50 +354,85 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setColumnWidths(newColumnWidths);
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF('landscape', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    const margin = 10;
+  const exportToPDF = async () => {
+    try {
+      console.log('Starting PDF generation...');
+      
+      // Create PDF document
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 10;
 
-    // Load logo
-    const logoUrl = process.env.PUBLIC_URL + '/logo.png';
-    const logoWidth = 30;
-    const logoHeight = 15;
+      console.log('Loading logo...');
+      // Load logo
+      const logoUrl = process.env.PUBLIC_URL + '/logo.jpg';
+      const logoSize = 20; // Square dimensions for logo
+      const logoMargin = margin;
 
-    // We need to load the image asynchronously
-    const img = new Image();
-    img.onload = function() {
-      doc.addImage(img, 'PNG', margin, margin, logoWidth, logoHeight);
+      // Load image asynchronously
+      let img;
+      try {
+        img = await new Promise((resolve, reject) => {
+          const image = new Image();
+          image.crossOrigin = "Anonymous";
+          
+          image.onload = () => {
+            console.log('Logo loaded successfully');
+            resolve(image);
+          };
+          
+          image.onerror = (e) => {
+            console.error('Logo load error:', e);
+            resolve(null);
+          };
+          
+          image.src = logoUrl;
+        });
+      } catch (logoError) {
+        console.error('Logo loading error:', logoError);
+        img = null;
+      }
+
+      console.log('Adding content to PDF...');
+      
+      // Add logo if available
+      if (img) {
+        try {
+          doc.addImage(img, 'JPEG', logoMargin, logoMargin, logoSize, logoSize);
+        } catch (addImageError) {
+          console.error('Error adding logo to PDF:', addImageError);
+        }
+      }
 
       // Add title with dynamic program number
       doc.setFontSize(18);
-      doc.setTextColor(186, 148, 46); // Gold color
-      doc.text(`Switching Program ${formData.programNo}`, pageWidth / 2, margin + 5, { align: 'center' });
+      doc.setTextColor(168, 75, 42); // #A84B2A Copper tone
+      doc.text(`Switching Program ${formData.programNo || ''}`, pageWidth / 2, margin + (logoSize/2), { align: 'center' }); // Center title vertically with logo
 
       // Add form data
       doc.setFontSize(10);
-      doc.setTextColor(0);
+      doc.setTextColor(46, 46, 46); // #2E2E2E Dark charcoal
       const formDataFields = [
-        { label: 'Work', value: formData.work, width: 2 }, // Give 'Work' 2 columns width
-        { label: 'Site', value: formData.site },
-        { label: 'Permit Number', value: formData.permitNo }, // Updated label here
-        { label: 'Reference Drawing', value: formData.referenceDrawing },
-        { label: 'Program No', value: formData.programNo },
-        { label: 'Date', value: formData.date },
-        { label: 'Prepared by', value: formData.preparedBy },
-        { label: 'Time', value: formData.time },
-        { label: 'Switcher', value: formData.switcher },
-        { label: 'Checked By', value: formData.checkedBy },
-        { label: 'Witness', value: formData.witness }
+        { label: 'Work', value: formData.work || '', width: 2 },
+        { label: 'Site', value: formData.site || '' },
+        { label: 'Permit Number', value: formData.permitNo || '' },
+        { label: 'Reference Drawing', value: formData.referenceDrawing || '' },
+        { label: 'Program No', value: formData.programNo || '' },
+        { label: 'Date', value: formData.date || '' },
+        { label: 'Prepared by', value: formData.preparedBy || '' },
+        { label: 'Time', value: formData.time || '' },
+        { label: 'Switcher', value: formData.switcher || '' },
+        { label: 'Checked By', value: formData.checkedBy || '' },
+        { label: 'Witness', value: formData.witness || '' }
       ];
 
-      let yPos = margin + logoHeight + 10;
+      let yPos = margin + logoSize + 5; // Start form data below logo with some padding
       const colWidth = (pageWidth - 2 * margin) / 3;
       let colsUsed = 0;
 
       formDataFields.forEach((field) => {
-        const fieldWidth = field.width || 1; // Default to 1 column if width not specified
+        const fieldWidth = field.width || 1;
         if (colsUsed + fieldWidth > 3) {
           yPos += 10;
           colsUsed = 0;
@@ -408,19 +443,18 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         doc.text(`${field.label}:`, xPos, yPos);
         doc.setFont(undefined, 'normal');
         
-        // Split long text into multiple lines if necessary
-        const maxWidth = colWidth * fieldWidth - 40; // Adjust 40 as needed for padding
-        const lines = doc.splitTextToSize(field.value, maxWidth);
+        const maxWidth = colWidth * fieldWidth - 40;
+        const lines = doc.splitTextToSize(field.value || '', maxWidth);
         doc.text(lines, xPos + 35, yPos);
         
-        // Increase yPos if multiple lines
         if (lines.length > 1) {
-          yPos += (lines.length - 1) * 5; // Adjust 5 as needed for line spacing
+          yPos += (lines.length - 1) * 5;
         }
         
         colsUsed += fieldWidth;
       });
 
+      console.log('Processing table data...');
       // Convert rows data for autoTable
       const tableRows = [];
       let itemNumber = 1;
@@ -440,27 +474,30 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           formattedRow = [itemNumber++, ...row];
         }
 
-        // Check if this is the REVERSE row and format it
-        if (formattedRow[5] === 'REVERSE') {
+        if (formattedRow && formattedRow[5] === 'REVERSE') {
           formattedRow[5] = { content: 'REVERSE', styles: { fontStyle: 'bold', textColor: [0, 0, 0], decoration: 'underline' } };
         }
 
-        tableRows.push(formattedRow);
+        if (formattedRow) {
+          tableRows.push(formattedRow);
+        }
       });
 
-      // Add table
-      doc.autoTable({
+      console.log('Generating table in PDF...');
+      // Add table with autoTable plugin
+      autoTable(doc, {
         head: [['Item', ...columns]],
         body: tableRows,
         startY: yPos + 15,
         theme: 'grid',
         headStyles: {
-          fillColor: [77, 15, 74], // American Purple
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
+          fillColor: [46, 46, 46], // #2E2E2E Dark charcoal
+          textColor: [247, 247, 247], // #F7F7F7 Off-white
+          fontStyle: 'bold',
+          fontSize: 10
         },
         alternateRowStyles: {
-          fillColor: [240, 240, 240]
+          fillColor: [247, 247, 247] // #F7F7F7 Light background
         },
         styles: {
           cellPadding: 2,
@@ -468,6 +505,9 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           valign: 'middle',
           overflow: 'linebreak',
           cellWidth: 'wrap',
+          textColor: [46, 46, 46], // #2E2E2E Dark charcoal
+          lineColor: [212, 212, 212], // #D4D4D4 Border color
+          lineWidth: 0.1
         },
         columnStyles: {
           0: { cellWidth: 15 },
@@ -480,33 +520,38 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           7: { cellWidth: 30 },
         },
         didDrawPage: function(data) {
-          // Add logo and title to each page
-          doc.addImage(img, 'PNG', margin, margin, logoWidth, logoHeight);
+          if (img) {
+            try {
+              doc.addImage(img, 'JPEG', logoMargin, logoMargin, logoSize, logoSize);
+            } catch (error) {
+              console.error('Error adding logo to new page:', error);
+            }
+          }
           doc.setFontSize(18);
-          doc.setTextColor(186, 148, 46); // Gold color
-          doc.text(`Switching Program ${formData.programNo}`, pageWidth / 2, margin + 5, { align: 'center' });
-  
-          // Ensure enough space between title and table
-          data.settings.margin.top = margin + logoHeight + 20;
-  
-          // Footer
+          doc.setTextColor(168, 75, 42); // #A84B2A Copper tone
+          doc.text(`Switching Program ${formData.programNo || ''}`, pageWidth / 2, margin + (logoSize/2), { align: 'center' });
+          data.settings.margin.top = margin + logoSize + 5;
           doc.setFontSize(8);
+          doc.setTextColor(46, 46, 46); // #2E2E2E Dark charcoal
           doc.text(`Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
         },
       });
 
-      // Create a custom filename with date
-      const preparedBy = formData.preparedBy || 'Unknown';
-      const programNo = formData.programNo || 'NoNumber';
-      const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-      const sanitizedPreparedBy = preparedBy.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const sanitizedProgramNo = programNo.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const filename = `${sanitizedPreparedBy}_program_${sanitizedProgramNo}_${currentDate}.pdf`;
+      console.log('Preparing to save PDF...');
+      // Create filename
+      const preparedBy = (formData.preparedBy || 'Unknown').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const programNo = (formData.programNo || 'NoNumber').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const currentDate = new Date().toISOString().split('T')[0];
+      const filename = `${preparedBy}_program_${programNo}_${currentDate}.pdf`;
 
-      // Save the PDF with the custom filename
+      // Save PDF
+      console.log('Saving PDF as:', filename);
       doc.save(filename);
-    };
-    img.src = logoUrl;
+      console.log('PDF generation completed successfully');
+    } catch (error) {
+      console.error('Detailed error in PDF generation:', error);
+      alert('There was an error generating the PDF. Please check the browser console for details and try again.');
+    }
   };
 
   return (
