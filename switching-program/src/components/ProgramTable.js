@@ -5,12 +5,11 @@ import { Resizable } from 'react-resizable';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import 'react-resizable/css/styles.css';
-import redX from './red_x.png'; // Ensure the path is correct!
-import insertIcon from './insert_icon.png'; // Import the insert icon
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
@@ -61,6 +60,15 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
 
   const isReverseRow = row[4] === 'REVERSE';
 
+  // Handle row click with scroll detection
+  const handleRowClick = (e) => {
+    // If scrolling is detected, don't trigger the row click
+    if (isScrolling) {
+      return;
+    }
+    onClick(index);
+  };
+
   return (
     <tr 
       ref={ref} 
@@ -68,7 +76,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
         opacity: isDragging ? 0.5 : 1,
         cursor: 'move',
       }}
-      onClick={() => onClick(index)} // Add onClick handler
+      onClick={handleRowClick} // Use the new handler
       className={isReverseSection ? 'reverse-section' : ''}
     >
       <td className="item-column">{itemNumber}</td>
@@ -97,7 +105,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
             }}
             title="Insert row"
           >
-            <img src={insertIcon} alt="Insert" width="16" height="16" />
+            <i className="bi bi-plus-circle-fill"></i>
           </button>
           <button 
             className="btn btn-link text-danger p-0 action-btn" 
@@ -107,7 +115,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
             }}
             title="Delete row"
           >
-            <img src={redX} alt="Delete" width="16" height="16" />
+            <i className="bi bi-trash-fill"></i>
           </button>
         </div>
       </td>
@@ -145,6 +153,24 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [showInsertPopup, setShowInsertPopup] = useState(false); // Track if insert popup is shown
   const [insertPopupPosition, setInsertPopupPosition] = useState({ x: 0, y: 0 }); // Track popup position
   const touchThreshold = 5;
+  const popupRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
+
+  // Add click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target) && 
+          !event.target.closest('.action-btn')) {
+        setShowInsertPopup(false);
+        setClickedRowIndex(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     setTableData(rows);
@@ -235,17 +261,51 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   // Function to handle row click
   const handleRowClick = (index) => {
+    // If scrolling is detected, don't trigger the row click
+    if (isScrolling) {
+      return;
+    }
     setClickedRowIndex(index); // Set the clicked row index
   };
 
   // Function to handle insert button click
   const handleInsertClick = (index, event) => {
-    // Get the position of the clicked button
-    const rect = event.currentTarget.getBoundingClientRect();
+    // Get the position of the mouse cursor
+    const x = event.clientX;
+    const y = event.clientY;
+    
+    // Get window dimensions
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // Calculate popup dimensions (approximate)
+    const popupWidth = 150; // min-width of popup
+    const popupHeight = 150; // approximate height
+    
+    // Adjust position to ensure popup is fully visible
+    let adjustedX = x;
+    let adjustedY = y;
+    
+    // Check if popup would go off the right edge
+    if (x + popupWidth / 2 > windowWidth) {
+      adjustedX = windowWidth - popupWidth / 2 - 10;
+    }
+    
+    // Check if popup would go off the left edge
+    if (x - popupWidth / 2 < 0) {
+      adjustedX = popupWidth / 2 + 10;
+    }
+    
+    // Check if popup would go off the top edge
+    if (y - popupHeight < 0) {
+      adjustedY = popupHeight + 10;
+    }
+    
     setInsertPopupPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top
+      x: adjustedX,
+      y: adjustedY
     });
+    
     setClickedRowIndex(index);
     setShowInsertPopup(true);
   };
@@ -469,11 +529,43 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
           if (distance > touchThreshold) {
             setIsScrolling(true);
+            
+            // Clear any existing timeout
+            if (scrollTimeoutRef.current) {
+              clearTimeout(scrollTimeoutRef.current);
+            }
+            
+            // Set a timeout to reset the scrolling state after a delay
+            scrollTimeoutRef.current = setTimeout(() => {
+              setIsScrolling(false);
+            }, 500); // 500ms delay
           }
         }}
         onTouchEnd={() => {
-          setIsScrolling(false);
-          touchStart.current = { x: 0, y: 0 };
+          // Clear any existing timeout
+          if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+          }
+          
+          // Set a timeout to reset the scrolling state after a delay
+          scrollTimeoutRef.current = setTimeout(() => {
+            setIsScrolling(false);
+            touchStart.current = { x: 0, y: 0 };
+          }, 300); // 300ms delay
+        }}
+        onWheel={(e) => {
+          // Detect wheel scrolling
+          setIsScrolling(true);
+          
+          // Clear any existing timeout
+          if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+          }
+          
+          // Set a timeout to reset the scrolling state after a delay
+          scrollTimeoutRef.current = setTimeout(() => {
+            setIsScrolling(false);
+          }, 300); // 300ms delay
         }}
       >
         <style>
@@ -503,6 +595,16 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             }
             .insert-options button {
               white-space: nowrap;
+            }
+            .bi {
+              font-size: 1.1rem;
+              vertical-align: -0.125em;
+            }
+            .action-column .bi {
+              font-size: 1.2rem;
+            }
+            .button-container .bi {
+              margin-right: 0.5rem;
             }
           `}
         </style>
@@ -573,9 +675,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           {/* Insert popup */}
           {showInsertPopup && clickedRowIndex !== null && (
             <div 
+              ref={popupRef}
               className="insert-options" 
               style={{ 
-                position: 'absolute', 
+                position: 'fixed', 
                 top: `${insertPopupPosition.y}px`, 
                 left: `${insertPopupPosition.x}px`, 
                 transform: 'translate(-50%, -100%)', 
@@ -583,11 +686,20 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                 border: '1px solid #ccc', 
                 padding: '10px', 
                 zIndex: 1000,
-                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                borderRadius: '4px',
-                marginTop: '-10px'
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                borderRadius: '6px',
+                marginTop: '-10px',
+                animation: 'fadeIn 0.2s ease-in-out'
               }}
             >
+              <style>
+                {`
+                  @keyframes fadeIn {
+                    from { opacity: 0; transform: translate(-50%, -90%); }
+                    to { opacity: 1; transform: translate(-50%, -100%); }
+                  }
+                `}
+              </style>
               <div className="text-center mb-2">
                 <small className="text-muted">Insert Row</small>
               </div>
@@ -595,13 +707,13 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                 className="btn btn-outline-primary btn-sm w-100 mb-2"
                 onClick={() => insertRowAbove(clickedRowIndex)}
               >
-                <span className="mr-1">↑</span> Above
+                <i className="bi bi-arrow-up-circle mr-1"></i> Above
               </button>
               <button
                 className="btn btn-outline-primary btn-sm w-100 mb-2"
                 onClick={() => insertRowBelow(clickedRowIndex)}
               >
-                <span className="mr-1">↓</span> Below
+                <i className="bi bi-arrow-down-circle mr-1"></i> Below
               </button>
               <button 
                 className="btn btn-outline-secondary btn-sm w-100" 
@@ -610,22 +722,28 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                   setShowInsertPopup(false);
                 }}
               >
-                Cancel
+                <i className="bi bi-x-circle mr-1"></i> Cancel
               </button>
             </div>
           )}
         </div>
         <div className="button-container">
-          <button className="btn btn-success" onClick={addRow}>Add Row</button>
-          <button className="btn btn-info" onClick={copyFromAbove}>Copy From Above</button>
+          <button className="btn btn-success" onClick={addRow}>
+            <i className="bi bi-plus-lg mr-1"></i> Add Row
+          </button>
+          <button className="btn btn-info" onClick={copyFromAbove}>
+            <i className="bi bi-files mr-1"></i> Copy From Above
+          </button>
           <button 
             className="btn btn-secondary"
             onClick={addReverseSection}
             disabled={hasReverseSection}
           >
-            Reverse
+            <i className="bi bi-arrow-left-right mr-1"></i> Reverse
           </button>
-          <button className="btn btn-primary" onClick={exportToPDF}>Export to PDF</button>
+          <button className="btn btn-primary" onClick={exportToPDF}>
+            <i className="bi bi-file-earmark-pdf mr-1"></i> Export to PDF
+          </button>
         </div>
       </div>
     </DndProvider>
