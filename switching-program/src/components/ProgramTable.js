@@ -110,6 +110,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
 const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [rows, setRows] = useState(tableData);
   const [isDragging, setIsDragging] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const [lastNumberedIndex, setLastNumberedIndex] = useState(-1);
   const [hasReverseSection, setHasReverseSection] = useState(false);
   const [columns] = useState([
@@ -118,6 +119,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [columnWidths, setColumnWidths] = useState([
     100, 80, 80, 100, 200, 80, 100
   ]);
+  const touchStart = useRef({ x: 0, y: 0 });
+  const touchThreshold = 5;
 
   useEffect(() => {
     setTableData(rows);
@@ -217,12 +220,12 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   const handleDragStart = useCallback(() => {
     setIsDragging(true);
-  }, []);
+  }, []); // Keep this empty
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
     setTableData(rows);
-  }, [rows, setTableData]);
+  }, [rows, setTableData]); // Keep the dependencies
 
   const deleteRow = (rowIndex) => {
     const newRows = rows.filter((_, index) => index !== rowIndex);
@@ -396,11 +399,35 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         className="spreadsheet-container p-3"
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onTouchStart={(e) => {
+          touchStart.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+          };
+        }}
+        onTouchMove={(e) => {
+          const touch = e.touches[0];
+          const deltaX = touch.clientX - touchStart.current.x;
+          const deltaY = touch.clientY - touchStart.current.y;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+          if (distance > touchThreshold) {
+            setIsScrolling(true);
+          }
+        }}
+        onTouchEnd={() => {
+          setIsScrolling(false);
+          touchStart.current = { x: 0, y: 0 };
+        }}
       >
         <div className="header-section">
           {/* Header content here */}
         </div>
         <div 
+          // Make sure to update the ID here as well.
+          // It should match the ID used in the touch event listeners above.
+          // If the ID is not found during runtime, consider adjusting 
+          // how this element is identified (e.g., using a ref).
           id="table-container" 
           className="table-container"
           style={{ 
@@ -450,6 +477,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     itemNumber={itemNumber}
                     isReverseSection={isReverseSection}
                     columnWidths={columnWidths}
+                    // Pass down the isScrolling state
+                    isScrolling={isScrolling}
+                    onDragStart={handleDragStart} // Pass the handler
+                    onDragEnd={handleDragEnd}     // Pass the handler
                   />
                 );
               })}

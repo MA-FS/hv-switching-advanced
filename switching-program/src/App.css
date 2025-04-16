@@ -20,8 +20,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: #2B5876;
+  font-size: calc(10px + 2vmin); 
+  color: #000000;
 }
 
 .App-link {
