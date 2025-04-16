@@ -6,10 +6,11 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import 'react-resizable/css/styles.css';
 import redX from './red_x.png'; // Ensure the path is correct!
+import insertIcon from './insert_icon.png'; // Import the insert icon
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
@@ -86,10 +87,29 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
           )}
         </td>
       ))}
-      <td className="delete-column">
-        <button className="btn btn-link text-danger p-0" onClick={() => deleteRow(index)}>
-          <img src={redX} alt="Delete" width="16" height="16" />
-        </button>
+      <td className="action-column">
+        <div className="d-flex justify-content-center">
+          <button 
+            className="btn btn-link text-primary p-0 mr-2 action-btn" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onInsertClick(index, e);
+            }}
+            title="Insert row"
+          >
+            <img src={insertIcon} alt="Insert" width="16" height="16" />
+          </button>
+          <button 
+            className="btn btn-link text-danger p-0 action-btn" 
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteRow(index);
+            }}
+            title="Delete row"
+          >
+            <img src={redX} alt="Delete" width="16" height="16" />
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -122,6 +142,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   ]);
   const touchStart = useRef({ x: 0, y: 0 });
   const [clickedRowIndex, setClickedRowIndex] = useState(null); // Track clicked row index
+  const [showInsertPopup, setShowInsertPopup] = useState(false); // Track if insert popup is shown
+  const [insertPopupPosition, setInsertPopupPosition] = useState({ x: 0, y: 0 }); // Track popup position
   const touchThreshold = 5;
 
   useEffect(() => {
@@ -216,18 +238,33 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setClickedRowIndex(index); // Set the clicked row index
   };
 
+  // Function to handle insert button click
+  const handleInsertClick = (index, event) => {
+    // Get the position of the clicked button
+    const rect = event.currentTarget.getBoundingClientRect();
+    setInsertPopupPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top
+    });
+    setClickedRowIndex(index);
+    setShowInsertPopup(true);
+  };
+
   // Function to insert row above
   const insertRowAbove = (index) => {
     const newRow = Array(columns.length).fill('');
     setRows([...rows.slice(0, index), newRow, ...rows.slice(index)]);
     setClickedRowIndex(null); // Reset clicked row index
+    setShowInsertPopup(false); // Hide the popup
   };
 
   const insertRowBelow = (index) => {
     const newRow = Array(columns.length).fill('');
     setRows([...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)]);
     setClickedRowIndex(null);
+    setShowInsertPopup(false); // Hide the popup
   };
+
   const moveRow = useCallback((dragIndex, hoverIndex) => {
     setRows((prevRows) => {
       const newRows = [...prevRows];
@@ -439,14 +476,40 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           touchStart.current = { x: 0, y: 0 };
         }}
       >
+        <style>
+          {`
+            .action-column {
+              width: 80px;
+              text-align: center;
+            }
+            .action-column .btn-link {
+              padding: 0;
+              margin: 0 5px;
+            }
+            .action-column .btn-link:hover {
+              opacity: 0.8;
+            }
+            .action-btn {
+              transition: transform 0.2s;
+            }
+            .action-btn:hover {
+              transform: scale(1.2);
+            }
+            .insert-options {
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+              min-width: 150px;
+            }
+            .insert-options button {
+              white-space: nowrap;
+            }
+          `}
+        </style>
         <div className="header-section">
           {/* Header content here */}
         </div>
         <div 
-          // Make sure to update the ID here as well.
-          // It should match the ID used in the touch event listeners above.
-          // If the ID is not found during runtime, consider adjusting 
-          // how this element is identified (e.g., using a ref).
           id="table-container" 
           className="table-container"
           style={{ 
@@ -468,7 +531,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     {col}
                   </ResizableHeader>
                 ))}
-                <th className="delete-column">Delete</th>
+                <th className="action-column">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -496,35 +559,61 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     itemNumber={itemNumber}
                     isReverseSection={isReverseSection}
                     columnWidths={columnWidths}
-                    // Pass down the isScrolling state
-                    onClick={handleRowClick} // Pass the click handler
+                    onClick={handleRowClick}
+                    onInsertClick={handleInsertClick}
                     isScrolling={isScrolling}
-                    onDragStart={handleDragStart} // Pass the handler
-                    onDragEnd={handleDragEnd}     // Pass the handler
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
                   />
                 );
               })}
             </tbody>
-            {clickedRowIndex !== null && (
-              <div className="insert-options" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'white', border: '1px solid #ccc', padding: '10px', zIndex: 1000 }}>
-                <button
-                  className="btn btn-secondary btn-sm mr-2"
-                  onClick={() => insertRowAbove(clickedRowIndex)}
-                >
-                  Insert Above
-                </button>
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => insertRowBelow(clickedRowIndex)}
-                >
-                  Insert Below
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => setClickedRowIndex(null)}>
-                    Cancel
-                  </button>
-                </div>
-              )}
           </table>
+          
+          {/* Insert popup */}
+          {showInsertPopup && clickedRowIndex !== null && (
+            <div 
+              className="insert-options" 
+              style={{ 
+                position: 'absolute', 
+                top: `${insertPopupPosition.y}px`, 
+                left: `${insertPopupPosition.x}px`, 
+                transform: 'translate(-50%, -100%)', 
+                backgroundColor: 'white', 
+                border: '1px solid #ccc', 
+                padding: '10px', 
+                zIndex: 1000,
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                borderRadius: '4px',
+                marginTop: '-10px'
+              }}
+            >
+              <div className="text-center mb-2">
+                <small className="text-muted">Insert Row</small>
+              </div>
+              <button
+                className="btn btn-outline-primary btn-sm w-100 mb-2"
+                onClick={() => insertRowAbove(clickedRowIndex)}
+              >
+                <span className="mr-1">↑</span> Above
+              </button>
+              <button
+                className="btn btn-outline-primary btn-sm w-100 mb-2"
+                onClick={() => insertRowBelow(clickedRowIndex)}
+              >
+                <span className="mr-1">↓</span> Below
+              </button>
+              <button 
+                className="btn btn-outline-secondary btn-sm w-100" 
+                onClick={() => {
+                  setClickedRowIndex(null);
+                  setShowInsertPopup(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
         <div className="button-container">
           <button className="btn btn-success" onClick={addRow}>Add Row</button>
