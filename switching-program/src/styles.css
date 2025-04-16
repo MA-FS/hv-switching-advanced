@@ -2,15 +2,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap');
 
 body {
-  background-color: #F3F3F3;
-  font-family: 'Raleway', sans-serif; /* Changed font family */
-  color: #333333; /* Default text color */
+  background-color: #F7F7F7;
+  font-family: 'Raleway', sans-serif;
+  color: #2E2E2E;
 }
 
 header {
-  background-color: #2B2B2B;
-  color: #FFFFFF;
-  padding: 1rem;
+  background-color: #2B2B2B; /* Dark Charcoal Grey */
+  color: #F7F7F7;
+  padding: 1.5rem;
+  border-bottom: 4px solid #FFB347; /* Golden accent */
 }
 
 .header-content {
@@ -27,40 +28,42 @@ header {
 }
 
 .title {
-  font-size: 4rem;
-  color: #FFFFFF;
+  font-size: 3.5rem;
+  color: #F7F7F7;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .container {
-  background: #FFFFFF;
-  padding: 1rem;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background: #F7F7F7;
+  padding: 1.5rem;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
 
 .info-container {
   background: #FFFFFF;
-  border: 2px solid #A9C5D9;
-  padding: 10px;
+  border: 1px solid #D4D4D4;
+  padding: 15px;
   margin-bottom: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .info-container label {
-  font-weight: bold;
-  color: #333333;
+  font-weight: 600;
+  color: #2E2E2E;
 }
 
 .info-container .form-control {
-  border: 1px solid #A9C5D9;
-  border-radius: 5px;
+  border: 1px solid #D4D4D4;
+  border-radius: 3px;
   margin-bottom: 5px;
   padding: 0.5rem;
-  font-size: 1.1rem;
-  color: #333333;
+  font-size: 1rem;
+  color: #2E2E2E;
 }
 
 .compact-field .form-control {
@@ -71,7 +74,7 @@ header {
 .separator {
   border: 0;
   height: 2px;
-  background: #A9C5D9;
+  background: #E0E0E0; /* Light Grey for separators */
   margin: 20px 0;
 }
 
@@ -83,75 +86,158 @@ header {
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 1rem;
 }
 
 table, th, td {
-  border: 1px solid #A9C5D9;
-  color: #333333;
+  border: 1px solid #D4D4D4;
 }
 
-th, td {
-  padding: 0.5rem;
+th {
+  background-color: #2E2E2E; /* Dark header background */
+  color: #FFFFFF;
+  padding: 12px;
+  font-weight: 600;
   text-align: left;
 }
 
-.table-container table input {
-  border: 1px solid #A9C5D9;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.5rem;
-  font-family: 'Titillium', sans-serif;
-  border-radius: 5px;
-  outline: none;
-  color: #333333;
+td {
+  padding: 10px;
+  background-color: #FFFFFF;
 }
 
-button {
-  margin-top: 0;
-  background-color: #2B5876;
+/* Primary action buttons */
+button.btn-primary {
+  background-color: #A84B2A; /* Copper tone */
   color: #FFFFFF;
   border: none;
-  padding: 0.7rem 1.2rem;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s, color 0.3s;
-  font-size: 1rem;
+  padding: 10px 20px;
+  border-radius: 3px;
+  font-weight: 600;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #A9C5D9;
-  color: #2B5876;
+button.btn-primary:hover {
+  background-color: #8A3D22; /* Darker copper */
 }
 
-.btn-warning {
-  background-color: #FFA07A; /* Light Salmon, adjust as needed */
+/* Secondary buttons */
+button.btn-secondary {
+  background-color: #4A4A4A;
   color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 3px;
+  font-weight: 600;
 }
 
-.btn-warning:hover {
-  background-color: #FF7F50; /* Coral, adjust as needed */
+button.btn-secondary:hover {
+  background-color: #333333;
+}
+
+/* Action buttons in table */
+.action-button {
+  background-color: #2E2E2E;
   color: #FFFFFF;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 3px;
+  margin: 0 2px;
 }
 
-.btn-secondary {
-  background-color: #A9C5D9;
-  border: 1px solid #A9C5D9;
-  color: #2B5876;
+.action-button:hover {
+  background-color: #A84B2A;
 }
 
-.btn-secondary:hover, .btn-secondary:focus {
-  background-color: #F3F3F3;
-  border-color: #2B5876;
-  color: #2B5876;
+/* Save and New Program buttons */
+.save-program {
+  background-color: #A84B2A;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 3px;
+  font-weight: 600;
 }
 
-.btn-secondary.rename-button:hover {
-  color: #2B5876 !important;
+.new-program {
+  background-color: #FFB347; /* Golden color */
+  color: #2E2E2E;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 3px;
+  font-weight: 600;
 }
 
-footer {
+/* Saved Programs section */
+.saved-programs {
   margin-top: 2rem;
-  color: #333333;
+}
+
+.saved-programs h2 {
+  color: #2E2E2E;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.program-card {
+  border: 1px solid #D4D4D4;
+  background-color: #FFFFFF;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.program-name {
+  background-color: #2E2E2E;
+  color: #FFFFFF;
+  padding: 8px 15px;
+  border-radius: 3px;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+/* Footer */
+footer {
+  background-color: #2E2E2E;
+  color: #FFFFFF;
+  padding: 2rem;
+  margin-top: 3rem;
+  text-align: center;
+}
+
+/* Add Row, Copy From Above, Reverse, Export buttons */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.add-row {
+  background-color: #A84B2A;
+}
+
+.copy-above {
+  background-color: #4A4A4A;
+}
+
+.reverse {
+  background-color: #2E2E2E;
+}
+
+.export-pdf {
+  background-color: #FFB347;
+  color: #2E2E2E;
+}
+
+/* Save confirmation */
+.save-confirmation {
+  background-color: #A84B2A;
+  color: #FFFFFF;
+  border-radius: 3px;
+  padding: 12px 24px;
 }
 
 /* Utility classes (adjust or remove as needed) */
@@ -232,57 +318,9 @@ footer {
   margin-left: 10px;
 }
 
-.program-card {
-  border: 1px solid #A9C5D9;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #FFFFFF;
-}
-
-.program-card .program-name {
-  flex: 1;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 10px;
-  background-color: #2B5876;
-  color: #FFFFFF;
-  border-radius: 5px;
-  text-align: center;
-  margin-right: 10px;
-}
-
-.program-card .program-name:hover {
-  background-color: #A9C5D9;
-  color: #2B5876;
-}
-
 .program-card .program-actions {
   display: flex;
   gap: 10px;
-}
-
-.save-confirmation {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background-color: #5cb85c; /* Bootstrap success green */
-  color: white;
-  padding: 16px;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  animation: fadeInOut 3s ease-in-out;
-  z-index: 1000;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; }
 }
 
 .button-container {
@@ -306,7 +344,7 @@ footer {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(46, 46, 46, 0.8); /* Charcoal with opacity for overlay */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -314,13 +352,13 @@ footer {
 }
 
 .readme-content {
-  background-color: #FFFFFF;
+  background-color: #F7F7F7; /* Soft White for content background */
   padding: 2rem;
   border-radius: 10px;
   max-width: 80%;
   max-height: 80%;
   overflow-y: auto;
-  color: #333333;
+  color: #4A4A4A; /* Steel Grey for text */
 }
 
 .readme-content h1 {
