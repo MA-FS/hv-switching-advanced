@@ -9,7 +9,7 @@ import redX from './red_x.png'; // Ensure the path is correct
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onRowClick, isScrolling, isCurrentlyDragging }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onRowClick, isScrolling, isDragging }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
@@ -499,7 +499,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     columnWidths={columnWidths}
                     onRowClick={handleRowClick} // Pass the click handler
                     isScrolling={isScrolling}
-                    isCurrentlyDragging={isDragging} // Changed isDragging to isCurrentlyDragging
+                    isDragging={isDragging} // Changed isDragging to isCurrentlyDragging
                   />
                 );
               })}
