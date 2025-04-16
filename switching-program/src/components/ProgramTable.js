@@ -5,7 +5,7 @@ import { Resizable } from 'react-resizable';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import 'react-resizable/css/styles.css';
-import redX from './red_x.png'; // Ensure the path is correct
+import redX from './red_x.png'; // Ensure the path is correct!
 
 const ItemType = 'ROW';
 
