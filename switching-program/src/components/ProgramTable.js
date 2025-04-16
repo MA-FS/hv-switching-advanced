@@ -64,7 +64,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     <tr 
       ref={ref} 
       style={{
-        opacity: localIsDragging ? 0.5 : 1,
+        opacity: isDragging ? 0.5 : 1,
         cursor: isScrolling ? 'default' : 'move', // Change cursor style based on isScrolling
       }}
       className={isReverseSection ? 'reverse-section' : ''}
@@ -508,6 +508,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               <div className="insertion-buttons">
                 <button className="btn btn-secondary" onClick={insertRowAbove}>Insert Above</button>
                 <button className="btn btn-secondary" onClick={insertRowBelow}>Insert Below</button>
+              </div>
+            )}
           </table>
         </div>
         <div className="button-container">
