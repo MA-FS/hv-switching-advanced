@@ -6,13 +6,14 @@
 }
 
 body {
-  background-color: #f4f4f4;
+  background-color: #F3F3F3;
   font-family: 'Titillium', sans-serif;
+  color: #333333; /* Default text color */
 }
 
 header {
-  background-color: white;  /* Change header background to white */
-  color: #4d0f4a;  /* American Purple for text */
+  background-color: #2B5876;
+  color: #FFFFFF;
   padding: 1rem;
 }
 
@@ -23,28 +24,27 @@ header {
 }
 
 .logo {
-  height: 70px;  /* Increase logo size */
+  height: 70px;
   margin-right: 15px;
 }
 
 .title {
   font-size: 4rem;
-  color: #ba942e;  /* Gold for title text */
+  color: #FFFFFF;
   margin: 0;
 }
 
 .container {
-  background: white;
+  background: #FFFFFF;
   padding: 1rem;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem; /* Add margin to the bottom of the container */
+  margin-bottom: 2rem;
 }
 
-/* Styles for the form section to make it look official */
 .info-container {
-  background: #fff;
-  border: 2px solid #ba942e; /* Gold border */
+  background: #FFFFFF;
+  border: 2px solid #A9C5D9;
   padding: 10px;
   margin-bottom: 20px;
   border-radius: 10px;
@@ -53,109 +53,110 @@ header {
 
 .info-container label {
   font-weight: bold;
-  color: #4d0f4a; /* American Purple */
+  color: #333333;
 }
 
 .info-container .form-control {
-  border: 1px solid #ddd;
+  border: 1px solid #A9C5D9;
   border-radius: 5px;
   margin-bottom: 5px;
   padding: 0.5rem;
-  font-size: 1.1rem; /* Slightly larger font size */
+  font-size: 1.1rem;
+  color: #333333;
 }
 
 .compact-field .form-control {
   width: 100%;
-  max-width: 250px; /* Adjust width as necessary */
+  max-width: 250px;
 }
 
 .separator {
   border: 0;
   height: 2px;
-  background: #ccc; /* Adjust color as needed */
+  background: #A9C5D9;
   margin: 20px 0;
 }
 
 .table-container {
-  margin-top: 2rem; /* Add margin to the top of the table container */
+  margin-top: 2rem;
   padding-top: 20px;
 }
 
 table {
   width: 100%;
+  border-collapse: collapse;
 }
 
 table, th, td {
-  border: 1px solid #ddd;
+  border: 1px solid #A9C5D9;
+  color: #333333;
 }
 
 th, td {
   padding: 0.5rem;
+  text-align: left;
 }
 
-/* More specific rule to remove default styling of inputs inside the table */
 .table-container table input {
-  border: none;
+  border: 1px solid #A9C5D9;
   width: 100%;
   box-sizing: border-box;
   padding: 0.5rem;
   font-family: 'Titillium', sans-serif;
-  border-radius: 0; /* Remove rounded corners */
-  outline: none; /* Remove outline on focus */
+  border-radius: 5px;
+  outline: none;
+  color: #333333;
 }
 
 button {
   margin-top: 0;
-  background-color: #4d0f4a;  /* American Purple */
-  color: white;
+  background-color: #2B5876;
+  color: #FFFFFF;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.7rem 1.2rem;
   cursor: pointer;
   border-radius: 5px;
   transition: background-color 0.3s, color 0.3s;
+  font-size: 1rem;
 }
 
 button:hover {
-  background-color: #ba942e;  /* Gold */
-  color: white; /* Keep the text color white */
+  background-color: #A9C5D9;
+  color: #2B5876;
 }
 
 .btn-warning {
-  background-color: #ffc107;
-  color: white;
+  background-color: #FFA07A; /* Light Salmon, adjust as needed */
+  color: #FFFFFF;
 }
 
 .btn-warning:hover {
-  background-color: #e0a800;
-  color: white; /* Keep the text color white */
+  background-color: #FF7F50; /* Coral, adjust as needed */
+  color: #FFFFFF;
 }
 
 .btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: #FFFFFF;
+  background-color: #A9C5D9;
+  border: 1px solid #A9C5D9;
+  color: #2B5876;
 }
 
 .btn-secondary:hover, .btn-secondary:focus {
-  background-color: #5a6268;
-  border-color: #5a6268;
-  color: #FFFFFF;
+  background-color: #F3F3F3;
+  border-color: #2B5876;
+  color: #2B5876;
 }
 
 .btn-secondary.rename-button:hover {
-  color: white !important; /* Keep the text color white */
+  color: #2B5876 !important;
 }
 
 footer {
   margin-top: 2rem;
+  color: #333333;
 }
 
-/* Make columns resizable */
-table th, table td {
-  resize: horizontal;
-  overflow: auto;
-}
-
+/* Utility classes (adjust or remove as needed) */
 .d-flex {
   display: flex;
   align-items: center;
@@ -181,37 +182,6 @@ table th, table td {
   margin-left: 1rem;
 }
 
-.btn-info {
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-}
-
-.btn-info:hover {
-  background-color: #138496;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-  border: none;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-/* Flexbox for responsive layout */
 .flex-container {
   display: flex;
   flex-wrap: wrap;
@@ -237,46 +207,9 @@ table th, table td {
   min-width: 150px;
 }
 
-/* Column width definitions */
-.item-column {
-  width: 5%;
-}
-
-.col-0 {
-  width: 20%;
-}
-
-.col-1 {
-  width: 10%;
-}
-
-.col-2 {
-  width: 10%;
-}
-
-.col-3 {
-  width: 10%;
-}
-
-.col-4 {
-  width: 25%;
-}
-
-.col-5 {
-  width: 10%;
-}
-
-.col-6 {
-  width: 10%;
-}
-
-.delete-column {
-  width: 5%;
-}
-
 .program-buttons-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
 }
 
@@ -284,10 +217,6 @@ table th, table td {
 .rename-button,
 .delete-button {
   grid-column: span 1;
-}
-
-.rename-button:hover {
-  color: white; /* Keep the text color white */
 }
 
 .program-row {
@@ -306,13 +235,14 @@ table th, table td {
 }
 
 .program-card {
-  border: 1px solid #ddd;
+  border: 1px solid #A9C5D9;
   border-radius: 5px;
   padding: 10px;
   margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #FFFFFF;
 }
 
 .program-card .program-name {
@@ -320,16 +250,16 @@ table th, table td {
   font-weight: bold;
   cursor: pointer;
   padding: 10px;
-  background-color: #007bff;
-  color: white;
+  background-color: #2B5876;
+  color: #FFFFFF;
   border-radius: 5px;
   text-align: center;
-  margin-right: 500px;
+  margin-right: 10px;
 }
 
 .program-card .program-name:hover {
-  background-color: #0056b3; /* Darker shade of blue */
-  color: white; /* Keep the text color white */
+  background-color: #A9C5D9;
+  color: #2B5876;
 }
 
 .program-card .program-actions {
@@ -337,70 +267,11 @@ table th, table td {
   gap: 10px;
 }
 
-/* CSS for resizable columns */
-table th, table td {
-  resize: horizontal;
-  overflow: auto;
-}
-
-.react-resizable {
-  position: relative;
-}
-
-.react-resizable-handle {
-  position: absolute;
-  width: 10px;
-  height: 100%;
-  bottom: 0;
-  right: -5px;
-  cursor: col-resize;
-  z-index: 1;
-}
-
-.table-container table th {
-  position: relative;
-  background-clip: padding-box;
-}
-
-.table-container table th .react-resizable-handle {
-  background-color: #ddd;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.table-container table th:hover .react-resizable-handle {
-  opacity: 1;
-}
-
-.table-container table th,
-.table-container table td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.table-container table input {
-  min-width: 100%;
-  box-sizing: border-box;
-}
-
-.reverse-section {
-  background-color: #f0f0f0; /* Light grey color */
-}
-
-.reverse-section input {
-  background-color: #f0f0f0; /* Match the background color for inputs */
-}
-
-.reverse-section td {
-  border-color: #d0d0d0; /* Slightly darker grey for borders */
-}
-
 .save-confirmation {
   position: fixed;
   top: 20px;
   right: 20px;
-  background-color: #4CAF50;
+  background-color: #5cb85c; /* Bootstrap success green */
   color: white;
   padding: 16px;
   border-radius: 4px;
@@ -445,12 +316,13 @@ table th, table td {
 }
 
 .readme-content {
-  background-color: white;
+  background-color: #FFFFFF;
   padding: 2rem;
   border-radius: 10px;
   max-width: 80%;
   max-height: 80%;
   overflow-y: auto;
+  color: #333333;
 }
 
 .readme-content h1 {
@@ -472,12 +344,10 @@ table th, table td {
   margin-top: 1rem;
 }
 
-/* Add these new styles at the end of your existing CSS file */
-
 .container-fluid {
   padding-left: 15px;
   padding-right: 15px;
-  max-width: 1140px; /* or whatever max-width you prefer */
+  max-width: 1140px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -500,17 +370,10 @@ table th, table td {
   margin-left: auto;
 }
 
-/* Update this existing style to remove the margin-bottom */
-.mb-3 {
-  margin-bottom: 0;
-}
-
-/* Ensure buttons have some space between them */
 .left-content button {
   margin-left: 10px;
 }
 
-/* Adjust the container fluid to have no padding */
 .container {
   padding-left: 0;
   padding-right: 0;
