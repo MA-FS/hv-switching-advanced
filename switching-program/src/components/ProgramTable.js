@@ -9,7 +9,7 @@ import redX from './red_x.png'; // Ensure the path is correct
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
