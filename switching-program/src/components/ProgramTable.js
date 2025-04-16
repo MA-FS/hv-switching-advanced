@@ -9,7 +9,7 @@ import redX from './red_x.png'; // Ensure the path is correct
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onRowClick, isScrolling, isDragging }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
@@ -64,11 +64,14 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     <tr 
       ref={ref} 
       style={{
-        opacity: isDragging ? 0.5 : 1,
-        cursor: 'move',
+        opacity: localIsDragging ? 0.5 : 1,
+        cursor: isScrolling ? 'default' : 'move', // Change cursor style based on isScrolling
       }}
       className={isReverseSection ? 'reverse-section' : ''}
+      onClick={() => !isScrolling && onRowClick(index)} // Call onRowClick when not scrolling
     >
+
+
       <td className="item-column">{itemNumber}</td>
       {row.map((col, colIndex) => (
         <td key={colIndex} style={{ width: columnWidths[colIndex] + 'px' }}>
@@ -109,6 +112,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
 
 const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [rows, setRows] = useState(tableData);
+  const [insertionIndex, setInsertionIndex] = useState(null); // State to track insertion row
   const [isDragging, setIsDragging] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const [lastNumberedIndex, setLastNumberedIndex] = useState(-1);
@@ -209,6 +213,22 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setRows(newRows);
   };
 
+  // Function to handle row click and set insertion index
+  const handleRowClick = (index) => {
+    setInsertionIndex(index);
+  };
+
+  const insertRowAbove = () => {
+    const newRow = Array(columns.length).fill('');
+    setRows([...rows.slice(0, insertionIndex), newRow, ...rows.slice(insertionIndex)]);
+    setInsertionIndex(null);
+  };
+
+  const insertRowBelow = () => {
+    const newRow = Array(columns.length).fill('');
+    setRows([...rows.slice(0, insertionIndex + 1), newRow, ...rows.slice(insertionIndex + 1)]);
+    setInsertionIndex(null);
+  };
   const moveRow = useCallback((dragIndex, hoverIndex) => {
     setRows((prevRows) => {
       const newRows = [...prevRows];
@@ -477,14 +497,17 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     itemNumber={itemNumber}
                     isReverseSection={isReverseSection}
                     columnWidths={columnWidths}
-                    // Pass down the isScrolling state
+                    onRowClick={handleRowClick} // Pass the click handler
                     isScrolling={isScrolling}
-                    onDragStart={handleDragStart} // Pass the handler
-                    onDragEnd={handleDragEnd}     // Pass the handler
+                    isDragging={isDragging}
                   />
                 );
               })}
             </tbody>
+            {insertionIndex !== null && (
+              <div className="insertion-buttons">
+                <button className="btn btn-secondary" onClick={insertRowAbove}>Insert Above</button>
+                <button className="btn btn-secondary" onClick={insertRowBelow}>Insert Below</button>
           </table>
         </div>
         <div className="button-container">
