@@ -2,7 +2,7 @@
 
 This tool allows you to create, edit, and export high voltage switching programs in an intuitive spreadsheet-like interface.
 
-Currently deployed at https://ma-fs.github.io/PMV-HV-Switching-Programs/
+Currently deployed at https://ma-fs.github.io/HV-Coach-HV-Switching-Programs/
 
 ## Features
 - Dynamic row management: Add, delete, and reorder rows
