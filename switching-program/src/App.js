@@ -65,6 +65,15 @@ const App = () => {
       alert('Please enter a name for the program.');
       return;
     }
+    
+    // If the program name is the same as the current program, just update it
+    if (currentProgramName === currentProgram) {
+      setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
+      setCurrentProgramName('');
+      return;
+    }
+    
+    // If a program with this name already exists and it's not the current program
     if (programs[currentProgramName] && currentProgramName !== currentProgram) {
       setConfirmationModal({
         show: true,
@@ -79,6 +88,8 @@ const App = () => {
       });
       return;
     }
+    
+    // Create a new program
     setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
     setCurrentProgram(currentProgramName);
     setCurrentProgramName('');
@@ -182,16 +193,16 @@ const App = () => {
       // Update current program if needed
       if (currentProgram === oldName) {
         setCurrentProgram(newName);
+        // Also update currentProgramName to match the new name
+        setCurrentProgramName(newName);
+        
+        // Force an immediate save of the renamed program
+        debouncedAutoSave(formData, tableData, newName);
       }
       
       // Ensure both storage mechanisms are updated
       localforage.setItem('programs', newPrograms);
       localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
-      
-      // Force an immediate autosave of the renamed program
-      if (currentProgram === newName) {
-        debouncedAutoSave(formData, tableData, newName);
-      }
     }
   };
 
