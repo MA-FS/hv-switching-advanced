@@ -8,6 +8,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import SaveConfirmation from './components/SaveConfirmation';
 import ReadmeSplash from './components/ReadmeSplash';
+import ConfirmationModal from './components/ConfirmationModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
 
@@ -21,6 +22,12 @@ const App = () => {
   const [currentProgram, setCurrentProgram] = useState('');
   const [saveConfirmation, setSaveConfirmation] = useState(false);
   const [showReadme, setShowReadme] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState({
+    show: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   useEffect(() => {
     localforage.getItem('hasVisited').then(hasVisited => {
@@ -56,9 +63,18 @@ const App = () => {
       return;
     }
     if (programs[currentProgramName] && currentProgramName !== currentProgram) {
-      if (!window.confirm('Are you sure you want to overwrite this program?')) {
-        return;
-      }
+      setConfirmationModal({
+        show: true,
+        title: 'Overwrite Program',
+        message: 'Are you sure you want to overwrite this program?',
+        onConfirm: () => {
+          setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
+          setCurrentProgram(currentProgramName);
+          setCurrentProgramName('');
+          setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+        }
+      });
+      return;
     }
     setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
     setCurrentProgram(currentProgramName);
@@ -86,41 +102,56 @@ const App = () => {
   };
 
   const handleLoadProgram = (programName) => {
-    if (!window.confirm('Are you sure you want to open this program?')) {
-      return;
-    }
-    const program = programs[programName];
-    setFormData(program.formData);
-    setTableData(program.tableData);
-    setCurrentProgram(programName);
+    setConfirmationModal({
+      show: true,
+      title: 'Load Program',
+      message: 'Are you sure you want to open this program?',
+      onConfirm: () => {
+        const program = programs[programName];
+        setFormData(program.formData);
+        setTableData(program.tableData);
+        setCurrentProgram(programName);
+        setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+      }
+    });
   };
 
   const handleDeleteProgram = (programName) => {
-    if (!window.confirm('Are you sure you want to delete this program?')) {
-      return;
-    }
-    const newPrograms = { ...programs };
-    delete newPrograms[programName];
-    setPrograms(newPrograms);
-    if (programName === currentProgram) {
-      setCurrentProgram('');
-      setFormData({
-        work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
-      });
-      setTableData([]);
-    }
+    setConfirmationModal({
+      show: true,
+      title: 'Delete Program',
+      message: 'Are you sure you want to delete this program?',
+      onConfirm: () => {
+        const newPrograms = { ...programs };
+        delete newPrograms[programName];
+        setPrograms(newPrograms);
+        if (programName === currentProgram) {
+          setCurrentProgram('');
+          setFormData({
+            work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
+          });
+          setTableData([]);
+        }
+        setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+      }
+    });
   };
 
   const handleNewProgram = () => {
-    if (!window.confirm('Are you sure you want to create a new program? All unsaved changes will be lost.')) {
-      return;
-    }
-    setCurrentProgram('');
-    setFormData({
-      work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
+    setConfirmationModal({
+      show: true,
+      title: 'New Program',
+      message: 'Are you sure you want to create a new program? All unsaved changes will be lost.',
+      onConfirm: () => {
+        setCurrentProgram('');
+        setFormData({
+          work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
+        });
+        setTableData([]);
+        setCurrentProgramName('');
+        setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+      }
     });
-    setTableData([]);
-    setCurrentProgramName('');
   };
 
   const handleRenameProgram = (oldName) => {
@@ -212,6 +243,13 @@ const App = () => {
       <Footer />
       <SaveConfirmation show={saveConfirmation} />
       <ReadmeSplash show={showReadme} onClose={() => setShowReadme(false)} />
+      <ConfirmationModal
+        show={confirmationModal.show}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        onConfirm={confirmationModal.onConfirm}
+        onCancel={() => setConfirmationModal({ show: false, title: '', message: '', onConfirm: null })}
+      />
     </DndProvider>
   );
 };
