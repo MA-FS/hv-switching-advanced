@@ -910,20 +910,21 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               vertical-align: middle !important;
             }
             .reverse-section {
-              background-color: #f8f9fa;
+              background-color: #333333 !important;
               transition: all 0.3s ease;
             }
             .reverse-section td {
-              border-color: #adb5bd !important;
+              border-color: #222222 !important;
             }
             .reverse-section input {
-              background-color: transparent;
+              background-color: #333333 !important;
               cursor: not-allowed;
-              opacity: 0.7;
+              opacity: 0.9;
               border-color: transparent;
+              color: #E0E0E0;
             }
             .reverse-section input:disabled {
-              color: #495057;
+              color: #E0E0E0;
             }
             
             /* New styles for the redesigned reverse row */
@@ -948,18 +949,18 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .reverse-divider {
               height: 40px;
               width: 100%;
-              border-top: 2px solid #A84B2A;
-              border-bottom: 2px solid #A84B2A;
+              border-top: 2px solid #B06745;
+              border-bottom: 2px solid #B06745;
               display: flex;
               align-items: center;
               justify-content: center;
               position: relative;
-              background-color: #f8f9fa;
+              background-color: #333333;
             }
             .reverse-text {
               text-align: center;
               font-size: 1.2em;
-              color: #A84B2A;
+              color: #C27E5F;
               font-weight: bold;
               letter-spacing: 1px;
               text-transform: uppercase;
@@ -967,21 +968,58 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .delete-reverse-btn {
               position: absolute;
               right: 15px;
-              color: #dc3545;
+              color: #D84747;
               background-color: transparent;
               border: none;
             }
             .delete-reverse-btn:hover {
-              color: #bd2130;
+              color: #C53030;
               transform: scale(1.2);
             }
             .reverse-input {
-              background-color: transparent !important;
+              background-color: #333333 !important;
               border: 1px solid transparent !important;
+              color: #E0E0E0;
             }
             .reverse-block {
               position: relative;
               margin: 15px 0;
+            }
+            .form-control {
+              background-color: #2A2A2A;
+              color: #F7F7F7;
+              border: 1px solid #222222;
+            }
+            .form-control:focus {
+              background-color: #2A2A2A;
+              color: #F7F7F7;
+              border-color: #B06745;
+              box-shadow: 0 0 0 0.2rem rgba(176, 103, 69, 0.25);
+            }
+            .table {
+              color: #F7F7F7;
+            }
+            .table-bordered {
+              border: 1px solid #222222;
+            }
+            .table-bordered td, .table-bordered th {
+              border: 1px solid #222222;
+            }
+            td {
+              background-color: #444444;
+            }
+            .action-btn.text-primary {
+              color: #C27E5F !important;
+            }
+            .action-btn.text-danger {
+              color: #D84747 !important;
+            }
+            .insert-options {
+              background-color: #333333 !important;
+              border: 1px solid #222222 !important;
+            }
+            .text-muted {
+              color: #E0E0E0 !important;
             }
           `}
         </style>
@@ -1079,14 +1117,11 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                 top: `${insertPopupPosition.y}px`, 
                 left: `${insertPopupPosition.x}px`, 
                 transform: 'translate(-50%, -100%)', 
-                backgroundColor: 'white', 
-                border: '1px solid #ccc', 
-                padding: '10px', 
+                padding: '15px', 
                 zIndex: 1000,
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                borderRadius: '6px',
                 marginTop: '-10px',
-                animation: 'fadeIn 0.2s ease-in-out'
+                animation: 'fadeIn 0.2s ease-in-out',
+                minWidth: '160px'
               }}
             >
               <style>
@@ -1097,22 +1132,22 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                   }
                 `}
               </style>
-              <div className="text-center mb-2">
-                <small className="text-muted">Insert Row</small>
+              <div className="text-center mb-3">
+                <span className="popup-title">Insert Row</span>
               </div>
               <button
                 className="btn btn-outline-primary btn-sm w-100 mb-2"
                 onClick={() => insertRowAbove(clickedRowIndex)}
                 title="Insert a new row above the selected row"
               >
-                <i className="bi bi-arrow-up-circle mr-1"></i> Above
+                <i className="bi bi-arrow-up-circle mr-2"></i> Above
               </button>
               <button
                 className="btn btn-outline-primary btn-sm w-100 mb-2"
                 onClick={() => insertRowBelow(clickedRowIndex)}
                 title="Insert a new row below the selected row"
               >
-                <i className="bi bi-arrow-down-circle mr-1"></i> Below
+                <i className="bi bi-arrow-down-circle mr-2"></i> Below
               </button>
               <button 
                 className="btn btn-outline-secondary btn-sm w-100" 
@@ -1122,7 +1157,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                 }}
                 title="Cancel row insertion"
               >
-                <i className="bi bi-x-circle mr-1"></i> Cancel
+                <i className="bi bi-x-circle mr-2"></i> Cancel
               </button>
             </div>
           )}

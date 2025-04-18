@@ -1,5 +1,6 @@
 import React from 'react';
 import './InfoForm.css';
+import '../styles.css';
 
 const InfoForm = ({ formData, handleChange }) => (
   <div className="info-container">
