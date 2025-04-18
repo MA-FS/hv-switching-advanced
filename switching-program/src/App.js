@@ -170,12 +170,27 @@ const App = () => {
         alert('A program with this name already exists.');
         return;
       }
+      
+      // Create new programs object with renamed program
       const newPrograms = { ...programs };
       newPrograms[newName] = newPrograms[oldName];
       delete newPrograms[oldName];
+      
+      // Update state
       setPrograms(newPrograms);
+      
+      // Update current program if needed
       if (currentProgram === oldName) {
         setCurrentProgram(newName);
+      }
+      
+      // Ensure both storage mechanisms are updated
+      localforage.setItem('programs', newPrograms);
+      localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
+      
+      // Force an immediate autosave of the renamed program
+      if (currentProgram === newName) {
+        debouncedAutoSave(formData, tableData, newName);
       }
     }
   };
