@@ -641,6 +641,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               width: 80px;
               text-align: center;
             }
+            .item-column {
+              width: 50px;
+              text-align: center;
+            }
             .action-column .btn-link {
               padding: 0;
               margin: 0 5px;
