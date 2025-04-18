@@ -188,6 +188,7 @@ button.btn-secondary:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
 .program-name {
@@ -392,18 +393,39 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  margin-bottom: 1rem;
-  padding: 0;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .left-content {
   display: flex;
   align-items: center;
+  gap: 15px;
+}
+
+.left-content h4 {
+  margin: 0;
+  padding: 10px 20px;
+  background-color: #A84B2A;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(168, 75, 42, 0.2);
+  transition: all 0.3s ease;
+}
+
+.left-content h4:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(168, 75, 42, 0.3);
 }
 
 .right-content {
-  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .left-content button {
@@ -413,4 +435,88 @@ footer {
 .container {
   padding-left: 0;
   padding-right: 0;
+}
+
+/* Add bounce animation keyframes */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Apply bounce effect to all clickable elements */
+button,
+.btn,
+.program-name,
+.action-btn,
+.btn-link,
+input[type="button"],
+input[type="submit"] {
+  transition: all 0.3s ease;
+}
+
+button:hover,
+.btn:hover,
+.program-name:hover,
+.action-btn:hover,
+.btn-link:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
+  animation: bounce 0.5s ease infinite;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Override specific button styles to maintain their colors while bouncing */
+button.btn-primary:hover {
+  background-color: #8A3D22;
+  animation: bounce 0.5s ease infinite;
+}
+
+button.btn-secondary:hover {
+  background-color: #333333;
+  animation: bounce 0.5s ease infinite;
+}
+
+button.btn-info:hover {
+  background-color: #138496;
+  animation: bounce 0.5s ease infinite;
+}
+
+button.btn-success:hover {
+  background-color: #218838;
+  animation: bounce 0.5s ease infinite;
+}
+
+button.btn-warning:hover {
+  background-color: #e0a800;
+  animation: bounce 0.5s ease infinite;
+}
+
+button.btn-danger:hover {
+  background-color: #c82333;
+  animation: bounce 0.5s ease infinite;
+}
+
+/* Ensure program cards have the bounce effect */
+.program-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Add bounce to action buttons in the table */
+.action-btn {
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  animation: bounce 0.5s ease infinite;
+  transform: scale(1.1);
+}
+
+/* Ensure the bounce effect doesn't interfere with dragging */
+[draggable="true"]:hover {
+  animation: none;
 }

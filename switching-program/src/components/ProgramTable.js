@@ -149,27 +149,38 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     100, 80, 80, 100, 200, 80, 100
   ]);
   const touchStart = useRef({ x: 0, y: 0 });
-  const [clickedRowIndex, setClickedRowIndex] = useState(null); // Track clicked row index
-  const [showInsertPopup, setShowInsertPopup] = useState(false); // Track if insert popup is shown
-  const [insertPopupPosition, setInsertPopupPosition] = useState({ x: 0, y: 0 }); // Track popup position
+  const [clickedRowIndex, setClickedRowIndex] = useState(null);
+  const [showInsertPopup, setShowInsertPopup] = useState(false);
+  const [insertPopupPosition, setInsertPopupPosition] = useState({ x: 0, y: 0 });
   const touchThreshold = 5;
   const popupRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // Add click outside handler
+  // Function to add a new state to history
+  const addToHistory = (newRows) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(JSON.stringify(newRows));
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Function to handle undo
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousState = JSON.parse(history[newIndex]);
+      setRows(previousState);
+      setHistoryIndex(newIndex);
+    }
+  };
+
+  // Update history when rows change
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target) && 
-          !event.target.closest('.action-btn')) {
-        setShowInsertPopup(false);
-        setClickedRowIndex(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (rows.length > 0) {
+      addToHistory(rows);
+    }
   }, []);
 
   useEffect(() => {
@@ -207,7 +218,9 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   const addRow = () => {
     const newRow = Array(columns.length).fill('');
-    setRows([...rows, newRow]);
+    const newRows = [...rows, newRow];
+    setRows(newRows);
+    addToHistory(newRows);
   };
 
   const copyFromAbove = () => {
@@ -219,15 +232,16 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     const lastRow = rows[rows.length - 1];
     const newRow = [...lastRow];
     
-    // Copy only specific columns
-    const columnsToCopy = [0, 1, 2, 3]; // Indices for Location, Volts, Type, Identity
+    const columnsToCopy = [0, 1, 2, 3];
     for (let i = 0; i < newRow.length; i++) {
       if (!columnsToCopy.includes(i)) {
         newRow[i] = '';
       }
     }
 
-    setRows([...rows, newRow]);
+    const newRows = [...rows, newRow];
+    setRows(newRows);
+    addToHistory(newRows);
   };
 
   const addReverseSection = () => {
@@ -237,8 +251,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         ['', '', '', '', 'REVERSE', '', ''],
         Array(columns.length).fill(''),
       ];
-      setRows([...rows, ...newRows]);
+      const updatedRows = [...rows, ...newRows];
+      setRows(updatedRows);
       setHasReverseSection(true);
+      addToHistory(updatedRows);
     }
   };
 
@@ -247,7 +263,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     const newRows = rows.map((row, rIdx) => {
       if (rIdx === rowIndex) {
         const updatedRow = [...row];
-        if (colIndex === 2) { // Index 2 corresponds to the "Type" column
+        if (colIndex === 2) {
           updatedRow[colIndex] = newValue.toUpperCase();
         } else {
           updatedRow[colIndex] = newValue;
@@ -257,6 +273,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       return row;
     });
     setRows(newRows);
+    addToHistory(newRows);
   };
 
   // Function to handle row click
@@ -313,16 +330,20 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   // Function to insert row above
   const insertRowAbove = (index) => {
     const newRow = Array(columns.length).fill('');
-    setRows([...rows.slice(0, index), newRow, ...rows.slice(index)]);
-    setClickedRowIndex(null); // Reset clicked row index
-    setShowInsertPopup(false); // Hide the popup
+    const newRows = [...rows.slice(0, index), newRow, ...rows.slice(index)];
+    setRows(newRows);
+    setClickedRowIndex(null);
+    setShowInsertPopup(false);
+    addToHistory(newRows);
   };
 
   const insertRowBelow = (index) => {
     const newRow = Array(columns.length).fill('');
-    setRows([...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)]);
+    const newRows = [...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)];
+    setRows(newRows);
     setClickedRowIndex(null);
-    setShowInsertPopup(false); // Hide the popup
+    setShowInsertPopup(false);
+    addToHistory(newRows);
   };
 
   const moveRow = useCallback((dragIndex, hoverIndex) => {
@@ -346,6 +367,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const deleteRow = (rowIndex) => {
     const newRows = rows.filter((_, index) => index !== rowIndex);
     setRows(newRows);
+    addToHistory(newRows);
   };
 
   const onResize = (index) => (event, { size }) => {
@@ -651,6 +673,22 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .button-container .bi {
               margin-right: 0.5rem;
             }
+            .undo-button {
+              background-color: #6c757d;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: background-color 0.2s;
+            }
+            .undo-button:hover {
+              background-color: #5a6268;
+            }
+            .undo-button:disabled {
+              background-color: #ccc;
+              cursor: not-allowed;
+            }
           `}
         </style>
         <div className="header-section">
@@ -773,6 +811,14 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           )}
         </div>
         <div className="button-container">
+          <button 
+            className="btn btn-secondary"
+            onClick={handleUndo}
+            disabled={historyIndex <= 0}
+            title="Undo last action"
+          >
+            <i className="bi bi-arrow-counterclockwise"></i> Undo
+          </button>
           <button className="btn btn-success" onClick={addRow}>
             <i className="bi bi-plus-lg mr-1"></i> Add Row
           </button>
