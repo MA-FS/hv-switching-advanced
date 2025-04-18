@@ -11,54 +11,89 @@ const ItemType = 'ROW';
 
 const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling, deleteReverseSection, rowInReverseBlock }) => {
   const ref = useRef(null);
-  const [{ isDragging }, drag] = useDrag({
-    type: ItemType,
-    item: () => ({ index, originalIndex: index }),
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    end: (item, monitor) => {
-      const { index: originalIndex } = item;
-      const didDrop = monitor.didDrop();
-      if (!didDrop) {
-        moveRow(item.index, originalIndex);
-      }
-    },
-    canDrag: () => !isReverseSection,
-  });
+  const originalIndex = index; // Store original index
 
-  const [, drop] = useDrop({
+  // *** useDrop modifications ***
+  const [{ handlerId, isOver, canDrop }, drop] = useDrop({
     accept: ItemType,
+    collect: (monitor) => ({
+      handlerId: monitor.getHandlerId(), // Needed for drop target identification
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
     hover: (item, monitor) => {
-      if (!ref.current) {
+      if (!ref.current || !canDrop) { // Check canDrop here as well
         return;
       }
-      const dragIndex = item.index;
-      const hoverIndex = index;
+      const dragIndex = item.index; // Index of the item being dragged
+      const hoverIndex = originalIndex; // Index of the item being hovered over (use originalIndex)
 
+      // Don't replace items with themselves
       if (dragIndex === hoverIndex) {
         return;
       }
 
-      if (isReverseSection) {
-        return;
-      }
-
+      // Determine rectangle on screen
       const hoverBoundingRect = ref.current.getBoundingClientRect();
+      // Get vertical middle
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      // Determine mouse position
       const clientOffset = monitor.getClientOffset();
+      // Get pixels to the top
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+
+      // Dragging downwards
       if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
         return;
       }
+      // Dragging upwards
       if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
         return;
       }
 
-      moveRow(dragIndex, hoverIndex);
+      // *** Defer actual move to drop ***
+      // moveRow(dragIndex, hoverIndex); // REMOVED FROM HOVER
+
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      // Update the item's index to reflect the potential new position.
+      // This is useful if we need the intermediate state for previews,
+      // but it's essential the final move uses originalIndex.
       item.index = hoverIndex;
     },
+    drop: (item, monitor) => {
+      // This is called when the item is dropped ON this component
+      const dragIndex = item.originalIndex; // Use the original index captured when drag started
+      const hoverIndex = originalIndex; // The index of the drop target (use originalIndex)
+
+      if (dragIndex === hoverIndex) {
+        return; // No change
+      }
+      // Perform the actual move
+      moveRow(dragIndex, hoverIndex);
+      // item.index is likely reset implicitly when drag ends, or could be reset here if needed.
+    },
+    canDrop: (item, monitor) => {
+        // Prevent dropping onto reverse sections
+        return !isReverseSection;
+    }
+  });
+
+  // *** useDrag modifications ***
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemType,
+    item: () => ({ index: originalIndex, originalIndex }), // Pass originalIndex
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+    // Removed 'end' handler as move is now done only on drop
+    canDrag: () => !isReverseSection,
   });
 
   drag(drop(ref));
@@ -66,32 +101,29 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
   const isReverseRow = row[5] === 'REVERSE';
   const showDeleteButton = isReverseSection && isReverseRow && rowInReverseBlock === 1;
 
-  // Handle row click with scroll detection
   const handleRowClick = (e) => {
-    // If scrolling is detected, don't trigger the row click
-    if (isScrolling) {
-      return;
-    }
-    onClick(index);
+    if (isScrolling) return;
+    onClick(originalIndex); // Use originalIndex
   };
 
-  // If this is a REVERSE row, render a special full-width row
+  // Handle reverse rows (unchanged)
   if (isReverseSection && isReverseRow) {
     return (
-      <tr 
-        ref={ref} 
+      <tr
+        ref={ref}
         className="reverse-row"
         onClick={handleRowClick}
+        data-handler-id={handlerId} // Add handlerId
       >
         <td colSpan="10" className="reverse-cell">
           <div className="reverse-divider">
             <span className="reverse-text">REVERSE</span>
             {showDeleteButton && (
-              <button 
-                className="btn btn-link p-0 delete-reverse-btn" 
+              <button
+                className="btn btn-link p-0 delete-reverse-btn"
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteReverseSection(index - 1);
+                  deleteReverseSection(originalIndex - 1); // Use originalIndex based logic if needed
                 }}
                 title="Delete the entire reverse section"
               >
@@ -104,16 +136,24 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     );
   }
 
+  // *** Regular row rendering modifications ***
+  const rowClasses = [
+    isReverseSection ? 'reverse-section' : '',
+    isDragging ? 'dragging-row' : '', // Class for the row being dragged
+    isOver && canDrop ? 'drop-target-highlight' : '' // Class for the row being hovered over
+  ].filter(Boolean).join(' ');
+
   return (
-    <tr 
-      ref={ref} 
+    <tr
+      ref={ref}
+      className={rowClasses}
       style={{
-        opacity: isDragging ? 0.5 : 1,
+        // opacity: isDragging ? 0.5 : 1, // Remove opacity change
         cursor: isReverseSection ? 'default' : 'move',
       }}
       onClick={handleRowClick}
-      className={isReverseSection ? 'reverse-section' : ''}
       title={isReverseSection ? "Reverse section (not draggable)" : "Click to select, drag to reorder"}
+      data-handler-id={handlerId} // Add handlerId for react-dnd backend internals
     >
       <td className="item-column">{isReverseSection ? '' : itemNumber}</td>
       {row.map((col, colIndex) => (
@@ -122,7 +162,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
             type="text"
             className={`form-control ${isReverseSection ? 'reverse-input' : ''}`}
             value={col}
-            onChange={(e) => handleInputChange(e, index, colIndex)}
+            onChange={(e) => handleInputChange(e, originalIndex, colIndex)} // Use originalIndex
             style={{ width: '100%' }}
             disabled={isReverseSection}
           />
@@ -131,21 +171,21 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       <td className="actions-cell">
         {!isReverseSection ? (
           <div className="d-flex justify-content-center align-items-center">
-            <button 
-              className="btn btn-link text-primary p-0 mr-2 action-btn" 
+            <button
+              className="btn btn-link text-primary p-0 mr-2 action-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                onInsertClick(index, e);
+                onInsertClick(originalIndex, e); // Use originalIndex
               }}
               title="Insert a new row at this position"
             >
               <i className="bi bi-plus-circle-fill"></i>
             </button>
-            <button 
-              className="btn btn-link text-danger p-0 action-btn" 
+            <button
+              className="btn btn-link text-danger p-0 action-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                deleteRow(index);
+                deleteRow(originalIndex); // Use originalIndex
               }}
               title="Delete this row"
             >
@@ -173,7 +213,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
 
 const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [rows, setRows] = useState(tableData);  
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const [lastNumberedIndex, setLastNumberedIndex] = useState(-1);
   const [hasReverseSection, setHasReverseSection] = useState(false);
@@ -221,12 +261,12 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   }, [showInsertPopup]);
 
   // Function to add a new state to history
-  const addToHistory = (newRows) => {
+  const addToHistory = useCallback((newRows) => {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(JSON.stringify(newRows));
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
-  };
+  }, [history, historyIndex]); // Dependencies for useCallback
 
   // Function to handle undo
   const handleUndo = () => {
@@ -459,28 +499,50 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   const moveRow = useCallback((dragIndex, hoverIndex) => {
-    // Don't allow moving if either index involves a reverse block
-    if (rows[dragIndex]?.isReverseBlock || rows[hoverIndex]?.isReverseBlock) {
+    // Ensure indices are valid and different
+    if (dragIndex === hoverIndex || dragIndex < 0 || hoverIndex < 0) {
+      console.warn("Attempted invalid move: indices out of bounds or same", dragIndex, hoverIndex);
       return;
     }
-    
+
     setRows((prevRows) => {
+      // Additional validation within the updater function
+      if (dragIndex >= prevRows.length || hoverIndex >= prevRows.length) {
+          console.warn("Attempted invalid move inside setRows: indices out of bounds", dragIndex, hoverIndex, prevRows.length);
+          return prevRows; // Return current state if indices became invalid
+      }
+       // Check if moving involves a reverse block (double check)
+      if (prevRows[dragIndex]?.isReverseBlock || prevRows[hoverIndex]?.isReverseBlock) {
+        console.warn("Attempted move involving reverse block inside setRows:", dragIndex, hoverIndex);
+        return prevRows; // Return current state
+      }
+
       const newRows = [...prevRows];
-      const [removed] = newRows.splice(dragIndex, 1);
-      newRows.splice(hoverIndex, 0, removed);
-      setTableData(newRows);
+      const [draggedItem] = newRows.splice(dragIndex, 1);
+
+      // Ensure draggedItem is valid before splicing
+      if (!draggedItem) {
+          console.error("Drag item not found at index:", dragIndex);
+          return prevRows; // Return previous state if item not found
+      }
+
+      newRows.splice(hoverIndex, 0, draggedItem);
+      // No need to call setTableData here, useEffect handles it
+      // Add to history *after* successful state update
+      addToHistory(newRows); // Call history update here
       return newRows;
     });
-  }, [rows, setTableData]);
+  }, [addToHistory]); // Removed rows, setTableData dependencies, added addToHistory
 
   const handleDragStart = useCallback(() => {
-    setIsDragging(true);
-  }, []); // Keep this empty
+    setIsDraggingGlobal(true);
+  }, []);
 
   const handleDragEnd = useCallback(() => {
-    setIsDragging(false);
-    setTableData(rows);
-  }, [rows, setTableData]);
+    setIsDraggingGlobal(false);
+    // No need to call setTableData(rows) here - useEffect handles it
+    // And moveRow now handles the final state update + history
+  }, []); // Keep dependencies minimal
 
   const deleteRow = (rowIndex) => {
     // Don't allow deleting if it's part of a reverse block
@@ -1044,6 +1106,52 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .text-muted {
               color: #E0E0E0 !important;
             }
+
+            /* --- NEW Drag and Drop Styles --- */
+
+            /* Style for the row being dragged */
+            .dragging-row {
+              opacity: 0.4 !important; /* Make it more transparent */
+              background-color: #555 !important; /* Darker background */
+              /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); */ /* Optional shadow */
+            }
+            .dragging-row td {
+               /* Optional: hide borders for a cleaner look */
+               /* border-color: transparent !important; */
+            }
+
+            /* Style for the row being hovered over as a drop target */
+            .drop-target-highlight {
+              /* Using borders for the highlight */
+              border-top: 3px solid #C27E5F !important; /* Copper tone top border */
+              border-bottom: 3px solid #C27E5F !important; /* Copper tone bottom border */
+              transition: border-top 0.1s ease-in-out, border-bottom 0.1s ease-in-out; /* Smooth transition for borders */
+            }
+            /* Adjust cell borders when row is highlighted to avoid double borders */
+            .drop-target-highlight td {
+                border-top-color: transparent !important;
+                border-bottom-color: transparent !important;
+            }
+            /* Ensure the outer left/right borders of the row remain visible */
+            .drop-target-highlight td:first-child {
+                 border-left: 1px solid #222222; /* Maintain original border */
+            }
+            .drop-target-highlight td:last-child {
+                 border-right: 1px solid #222222; /* Maintain original border */
+            }
+
+            /* Prevent highlighting styles on reverse sections */
+            .reverse-section.drop-target-highlight,
+            .reverse-row.drop-target-highlight {
+                border-top: none !important;
+                border-bottom: none !important;
+            }
+            .reverse-section.drop-target-highlight td,
+            .reverse-row.drop-target-highlight td {
+                 border-top-color: #222222 !important; /* Restore default border */
+                 border-bottom-color: #222222 !important;
+            }
+             /* --- End Drag and Drop Styles --- */
           `}
         </style>
         <div className="header-section">
@@ -1053,9 +1161,9 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           id="table-container" 
           className="table-container"
           style={{ 
-            userSelect: isDragging ? 'none' : 'auto',
-            WebkitUserSelect: isDragging ? 'none' : 'auto',
-            MozUserSelect: isDragging ? 'none' : 'auto',
+            userSelect: isDraggingGlobal ? 'none' : 'auto',
+            WebkitUserSelect: isDraggingGlobal ? 'none' : 'auto',
+            MozUserSelect: isDraggingGlobal ? 'none' : 'auto',
           }}
         >
           <table className="table table-bordered">
@@ -1078,41 +1186,45 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             </thead>
             <tbody>
               {rows.map((rowData, index) => {
+                // Use the current index from the map function as the key and original index identifier
+                const originalIndex = index;
+
                 if (rowData.isReverseBlock) {
+                  // Render reverse block rows
                   return rowData.rows.map((row, rowIndex) => (
                     <DraggableRow
-                      key={`reverse-${index}-${rowIndex}`}
+                      key={`reverse-${originalIndex}-${rowIndex}`} // Key stability
                       row={row}
-                      index={index}
+                      index={originalIndex} // Pass the block's index
                       moveRow={moveRow}
                       handleInputChange={handleInputChange}
                       deleteRow={deleteRow}
-                      itemNumber={''}
+                      itemNumber={''} // No item number for reverse block internal rows
                       isReverseSection={true}
                       columnWidths={columnWidths}
-                      onClick={handleRowClick}
-                      onInsertClick={handleInsertClick}
+                      onClick={handleRowClick} // Clicks on reverse rows might need specific handling
+                      onInsertClick={handleInsertClick} // Inserting near reverse blocks is likely disabled
                       isScrolling={isScrolling}
-                      deleteReverseSection={deleteReverseSection}
-                      rowInReverseBlock={rowIndex}
+                      deleteReverseSection={deleteReverseSection} // Pass the specific delete function
+                      rowInReverseBlock={rowIndex} // Pass the index within the block
                     />
                   ));
                 }
 
+                // Calculate item number for non-reverse rows
                 let itemNumber = '';
-                if (!rowData.isReverseBlock) {
-                  const precedingNonReverseCount = rows
-                    .slice(0, index)
-                    .filter(r => !r.isReverseBlock)
-                    .length;
-                  itemNumber = precedingNonReverseCount + 1;
-                }
+                const precedingNonReverseCount = rows
+                  .slice(0, originalIndex)
+                  .filter(r => !r.isReverseBlock)
+                  .length;
+                itemNumber = precedingNonReverseCount + 1;
 
+                // Render regular draggable row
                 return (
                   <DraggableRow
-                    key={`row-${index}`}
+                    key={`row-${originalIndex}`} // Key stability using index
                     row={rowData}
-                    index={index}
+                    index={originalIndex} // Pass the current index
                     moveRow={moveRow}
                     handleInputChange={handleInputChange}
                     deleteRow={deleteRow}
@@ -1122,8 +1234,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     onClick={handleRowClick}
                     onInsertClick={handleInsertClick}
                     isScrolling={isScrolling}
-                    deleteReverseSection={deleteReverseSection}
-                    rowInReverseBlock={-1}
+                    deleteReverseSection={deleteReverseSection} // Pass delete function (though not used directly here)
+                    rowInReverseBlock={-1} // Not in a reverse block
                   />
                 );
               })}
