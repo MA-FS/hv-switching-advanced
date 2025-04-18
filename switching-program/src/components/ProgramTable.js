@@ -694,33 +694,33 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         didDrawPage: function(data) {
           // For pages after the first page
           if (data.pageNumber > 1) {
-            // Clear the header area with minimal height
+            // Clear the header area
             doc.setFillColor(255, 255, 255);
-            doc.rect(0, 0, pageWidth, margin + 8, 'F');
+            doc.rect(0, 0, pageWidth, margin + 25, 'F');
             
-            // Add header with minimal spacing
-            doc.setFontSize(12);
+            // Add header with exact same spacing as first page
             if (img) {
               try {
-                doc.addImage(img, 'JPEG', margin, margin - 5, logoSize * 0.5, logoSize * 0.5);
+                doc.addImage(img, 'JPEG', margin, margin, logoSize, logoSize);
               } catch (error) {
                 console.error('Error adding logo:', error);
               }
             }
 
-            // Add title with minimal spacing
+            // Add title with exact same spacing as first page
+            doc.setFontSize(16);
             doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-            doc.text("HV Coach", margin + (logoSize * 0.5) + 5, margin + 2);
-            doc.text("SWITCHING PROGRAM", margin + (logoSize * 0.5) + 35, margin + 2);
+            doc.text("HV Coach", margin + logoSize + 5, margin + 8);
+            doc.text("SWITCHING PROGRAM", margin + logoSize + 45, margin + 8);
 
-            // Add name and program number with minimal spacing
-            doc.setFontSize(8);
+            // Add name and program number with exact same spacing as first page
+            doc.setFontSize(10);
             doc.setTextColor(0);
-            const nameY = margin;
+            const nameY = margin + 5;
             doc.text("NAME", pageWidth - 120, nameY);
             doc.text(formData.name || '', pageWidth - 80, nameY);
-            doc.text("Program No:", pageWidth - 120, nameY + 3);
-            doc.text(formData.programNo || '', pageWidth - 80, nameY + 3);
+            doc.text("Program No:", pageWidth - 120, nameY + 5);
+            doc.text(formData.programNo || '', pageWidth - 80, nameY + 5);
           }
           
           // Add page number (for all pages)
@@ -735,14 +735,31 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           );
         },
         willDrawPage: function(data) {
-          if (data.pageNumber === 1) {
-            data.settings.margin.top = tableStartY;
-          } else {
-            data.settings.margin.top = margin + 5;
-          }
+          // Set consistent top margin for all pages
+          data.settings.margin.top = margin + 25; // 25mm space for header
           data.settings.margin.left = margin;
           data.settings.margin.right = margin;
           data.settings.margin.bottom = margin + 10;
+        },
+        bodyStyles: {
+          minCellHeight: 8 // Set minimum cell height to ensure consistent spacing
+        },
+        columnStyles: {
+          0: { cellWidth: 15 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 'auto' },
+          6: { cellWidth: 20 },
+          7: { cellWidth: 25 }
+        },
+        // Add specific handling for REVERSE section to maintain consistent spacing
+        didParseCell: function(data) {
+          // If this is a REVERSE section row, ensure consistent height
+          if (data.row.cells[5] && data.row.cells[5].content === 'REVERSE') {
+            data.cell.styles.minCellHeight = 8;
+          }
         }
       });
 
