@@ -9,7 +9,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling, deleteReverseSection }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling, deleteReverseSection, rowInReverseBlock }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
@@ -24,7 +24,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
         moveRow(item.index, originalIndex);
       }
     },
-    canDrag: () => !isReverseSection, // Prevent dragging rows in the reverse section
+    canDrag: () => !isReverseSection,
   });
 
   const [, drop] = useDrop({
@@ -40,7 +40,6 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
         return;
       }
 
-      // Prevent dropping into the reverse section
       if (isReverseSection) {
         return;
       }
@@ -65,6 +64,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
   drag(drop(ref));
 
   const isReverseRow = row[5] === 'REVERSE';
+  const showDeleteButton = isReverseSection && isReverseRow && rowInReverseBlock === 1;
 
   // Handle row click with scroll detection
   const handleRowClick = (e) => {
@@ -81,21 +81,22 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       style={{
         opacity: isDragging ? 0.5 : 1,
         cursor: isReverseSection ? 'default' : 'move',
-        backgroundColor: isReverseSection ? 'transparent' : 'inherit',
       }}
       onClick={handleRowClick}
       className={isReverseSection ? 'reverse-section' : ''}
       title={isReverseSection ? "Reverse section (not draggable)" : "Click to select, drag to reorder"}
     >
-      <td className="item-column">{itemNumber}</td>
+      <td className="item-column">{isReverseSection ? '' : itemNumber}</td>
       {row.map((col, colIndex) => (
         <td key={colIndex} style={{ width: columnWidths[colIndex] + 'px' }}>
           {col === 'REVERSE' && colIndex === 5 ? (
-            <b><u>REVERSE</u></b>
+            <div className="reverse-text">
+              REVERSE
+            </div>
           ) : (
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${isReverseSection ? 'reverse-input' : ''}`}
               value={col}
               onChange={(e) => handleInputChange(e, index, colIndex)}
               style={{ width: '100%' }}
@@ -105,12 +106,12 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
         </td>
       ))}
       <td className="actions-cell">
-        {isReverseSection && isReverseRow ? (
+        {showDeleteButton ? (
           <button 
-            className="btn btn-link text-danger p-0 action-btn" 
+            className="btn btn-link p-0 action-btn" 
             onClick={(e) => {
               e.stopPropagation();
-              deleteReverseSection(index);
+              deleteReverseSection(index - 1);
             }}
             title="Delete the entire reverse section"
           >
@@ -227,22 +228,30 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const updateLastNumberedIndex = (currentRows) => {
     let lastIndex = -1;
     for (let i = 0; i < currentRows.length; i++) {
-      if (isReverseRow(currentRows[i])) {
+      const row = currentRows[i];
+      if (row.isReverseBlock) {
         break;
       }
-      if (!isEmptyRow(currentRows[i])) {
+      if (!isEmptyRow(row)) {
         lastIndex = i;
       }
     }
     setLastNumberedIndex(lastIndex);
   };
 
-  const isReverseRow = (row) => row[5] === 'REVERSE';
-  const isEmptyRow = (row) => row.every(cell => cell === '');
+  const isReverseRow = (row) => {
+    if (!row || row.isReverseBlock) return false;
+    return row[5] === 'REVERSE';
+  };
+
+  const isEmptyRow = (row) => {
+    if (!row || row.isReverseBlock) return false;
+    return Array.isArray(row) && row.every(cell => cell === '');
+  };
 
   const checkReverseSection = (currentRows) => {
-    const reverseIndex = currentRows.findIndex(isReverseRow);
-    setHasReverseSection(reverseIndex !== -1);
+    const hasReverse = currentRows.some(row => row.isReverseBlock);
+    setHasReverseSection(hasReverse);
   };
 
   const addRow = () => {
@@ -277,13 +286,16 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   const addReverseSection = () => {
     if (!hasReverseSection) {
-      // Create a special reverse section block with three rows
-      const newRows = [
-        Array(columns.length).fill(''),
-        ['', '', '', '', 'REVERSE', '', ''],
-        Array(columns.length).fill(''),
-      ];
-      const updatedRows = [...rows, ...newRows];
+      // Create a special reverse section block with three rows as a single unit
+      const reverseBlock = {
+        isReverseBlock: true,
+        rows: [
+          Array(columns.length).fill(''),
+          ['', '', '', '', '', 'REVERSE', '', ''],
+          Array(columns.length).fill('')
+        ]
+      };
+      const updatedRows = [...rows, reverseBlock];
       setRows(updatedRows);
       setTableData(updatedRows);
       setHasReverseSection(true);
@@ -294,6 +306,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const handleInputChange = (e, rowIndex, colIndex) => {
     const newValue = e.target.value;
     const newRows = rows.map((row, rIdx) => {
+      if (row.isReverseBlock) return row;
       if (rIdx === rowIndex) {
         const updatedRow = [...row];
         if (colIndex === 2) {
@@ -370,10 +383,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   // Function to insert row above
   const insertRowAbove = (index) => {
-    // Check if the row is part of the reverse section
-    const reverseIndex = rows.findIndex(isReverseRow);
-    if (reverseIndex !== -1 && (index === reverseIndex || index === reverseIndex - 1 || index === reverseIndex + 1)) {
-      // Don't allow inserting rows into the reverse section
+    // Don't allow inserting if the target row is part of a reverse block
+    if (rows[index]?.isReverseBlock) {
       return;
     }
     
@@ -387,10 +398,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   const insertRowBelow = (index) => {
-    // Check if the row is part of the reverse section
-    const reverseIndex = rows.findIndex(isReverseRow);
-    if (reverseIndex !== -1 && (index === reverseIndex || index === reverseIndex - 1 || index === reverseIndex + 1)) {
-      // Don't allow inserting rows into the reverse section
+    // Don't allow inserting if the target row is part of a reverse block
+    if (rows[index]?.isReverseBlock) {
       return;
     }
     
@@ -404,14 +413,9 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   const moveRow = useCallback((dragIndex, hoverIndex) => {
-    // Check if either the drag or hover index is part of the reverse section
-    const reverseIndex = rows.findIndex(isReverseRow);
-    if (reverseIndex !== -1) {
-      if (dragIndex === reverseIndex || dragIndex === reverseIndex - 1 || dragIndex === reverseIndex + 1 ||
-          hoverIndex === reverseIndex || hoverIndex === reverseIndex - 1 || hoverIndex === reverseIndex + 1) {
-        // Don't allow moving rows into or out of the reverse section
-        return;
-      }
+    // Don't allow moving if either index involves a reverse block
+    if (rows[dragIndex]?.isReverseBlock || rows[hoverIndex]?.isReverseBlock) {
+      return;
     }
     
     setRows((prevRows) => {
@@ -433,10 +437,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   }, [rows, setTableData]);
 
   const deleteRow = (rowIndex) => {
-    // Check if the row is part of the reverse section
-    const reverseIndex = rows.findIndex(isReverseRow);
-    if (reverseIndex !== -1 && (rowIndex === reverseIndex || rowIndex === reverseIndex - 1 || rowIndex === reverseIndex + 1)) {
-      // Don't allow deleting individual rows in the reverse section
+    // Don't allow deleting if it's part of a reverse block
+    if (rows[rowIndex]?.isReverseBlock) {
       return;
     }
     
@@ -447,9 +449,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   // Function to delete the entire reverse section
-  const deleteReverseSection = (reverseRowIndex) => {
-    // Remove all three rows of the reverse section
-    const newRows = rows.filter((_, index) => index < reverseRowIndex - 1 || index > reverseRowIndex + 1);
+  const deleteReverseSection = (index) => {
+    const newRows = rows.filter((row, i) => !row.isReverseBlock);
     setRows(newRows);
     setTableData(newRows);
     setHasReverseSection(false);
@@ -619,27 +620,26 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       // Process table data
       const tableRows = [];
       let itemNumber = 1;
-      const reverseIndex = rows.findIndex(row => row[5] === 'REVERSE');
-
-      rows.forEach((row, index) => {
-        let formattedRow;
-        if (reverseIndex !== -1) {
-          if (index === reverseIndex - 1 || index === reverseIndex || index === reverseIndex + 1) {
-            formattedRow = ['', ...row];
-          } else if (index < reverseIndex) {
-            formattedRow = [itemNumber++, ...row];
-          } else if (index > reverseIndex + 1) {
-            formattedRow = [itemNumber++, ...row];
-          }
+      rows.forEach((rowData, index) => {
+        if (rowData.isReverseBlock) {
+          rowData.rows.forEach((row, rowIndex) => {
+            const formattedRow = ['', ...row];
+            if (rowIndex === 1) { // Middle row with REVERSE text
+              formattedRow[6] = { 
+                content: 'REVERSE', 
+                styles: { 
+                  fontStyle: 'bold', 
+                  textColor: [220, 53, 69],
+                  decoration: 'underline',
+                  cellPadding: 4,
+                  halign: 'center'
+                } 
+              };
+            }
+            tableRows.push(formattedRow);
+          });
         } else {
-          formattedRow = [itemNumber++, ...row];
-        }
-
-        if (formattedRow && formattedRow[5] === 'REVERSE') {
-          formattedRow[5] = { content: 'REVERSE', styles: { fontStyle: 'bold', textColor: [0, 0, 0], decoration: 'underline' } };
-        }
-
-        if (formattedRow) {
+          const formattedRow = [itemNumber++, ...rowData];
           tableRows.push(formattedRow);
         }
       });
@@ -762,22 +762,11 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         bodyStyles: {
           minCellHeight: 8 // Set minimum cell height to ensure consistent spacing
         },
-        columnStyles: {
-          0: { cellWidth: 15 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 25 },
-          6: { cellWidth: 'auto' },
-          7: { cellWidth: 20 },
-          8: { cellWidth: 20 }
-        },
-        // Add specific handling for REVERSE section to maintain consistent spacing
         didParseCell: function(data) {
-          // If this is a REVERSE section row, ensure consistent height
+          // If this is a REVERSE section row, ensure consistent height and styling
           if (data.row.cells[5] && data.row.cells[5].content === 'REVERSE') {
             data.cell.styles.minCellHeight = 8;
+            data.cell.styles.fillColor = [248, 249, 250]; // Light gray background
           }
         }
       });
@@ -895,11 +884,18 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               vertical-align: middle !important;
             }
             .reverse-section {
-              background-color: #f8f9fa;
               position: relative;
-              background-image: linear-gradient(45deg, #f8f9fa 25%, #e9ecef 25%, #e9ecef 50%, #f8f9fa 50%, #f8f9fa 75%, #e9ecef 75%, #e9ecef 100%);
-              background-size: 20px 20px;
-              background-position: 0 0;
+              background: repeating-linear-gradient(
+                45deg,
+                #f8f9fa,
+                #f8f9fa 10px,
+                #e9ecef 10px,
+                #e9ecef 20px
+              );
+              transition: all 0.3s ease;
+            }
+            .reverse-section td {
+              border-color: #adb5bd !important;
             }
             .reverse-section:first-of-type {
               border-top: 2px solid #6c757d;
@@ -916,6 +912,73 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .reverse-section input {
               background-color: transparent;
               cursor: not-allowed;
+              opacity: 0.7;
+              border-color: transparent;
+            }
+            .reverse-section input:disabled {
+              color: #495057;
+            }
+            .reverse-text {
+              text-align: center;
+              font-size: 1.2em;
+              color: #dc3545;
+              padding: 8px 0;
+              font-weight: bold;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              position: relative;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .reverse-text::before,
+            .reverse-text::after {
+              content: '';
+              position: absolute;
+              height: 2px;
+              background-color: #dc3545;
+              width: 30%;
+              top: 50%;
+            }
+            .reverse-text::before {
+              right: 65%;
+            }
+            .reverse-text::after {
+              left: 65%;
+            }
+            .reverse-section .actions-cell {
+              background-color: transparent;
+            }
+            .reverse-section .action-btn {
+              position: absolute;
+              right: 10px;
+              top: 50%;
+              transform: translateY(-50%);
+              background-color: rgba(255, 255, 255, 0.9);
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              border: 1px solid #dc3545;
+            }
+            .reverse-section .action-btn:hover {
+              transform: translateY(-50%) scale(1.1);
+              box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            }
+            .reverse-section .action-btn i {
+              color: #dc3545;
+              font-size: 1.2em;
+            }
+            .reverse-input {
+              background-color: transparent !important;
+              border: 1px solid transparent !important;
+            }
+            .reverse-block {
+              position: relative;
+              margin: 15px 0;
             }
           `}
         </style>
@@ -950,36 +1013,52 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, index) => {
-                let itemNumber = '';
-                const reverseIndex = rows.findIndex(isReverseRow);
-                if (index <= lastNumberedIndex) {
-                  itemNumber = index + 1;
-                } else if (reverseIndex !== -1 && index > reverseIndex + 1) {
-                  const numberedRowsAfterReverse = index - reverseIndex - 2;
-                  itemNumber = lastNumberedIndex + 2 + numberedRowsAfterReverse;
+              {rows.map((rowData, index) => {
+                if (rowData.isReverseBlock) {
+                  return rowData.rows.map((row, rowIndex) => (
+                    <DraggableRow
+                      key={`reverse-${index}-${rowIndex}`}
+                      row={row}
+                      index={index}
+                      moveRow={moveRow}
+                      handleInputChange={handleInputChange}
+                      deleteRow={deleteRow}
+                      itemNumber={''}
+                      isReverseSection={true}
+                      columnWidths={columnWidths}
+                      onClick={handleRowClick}
+                      onInsertClick={handleInsertClick}
+                      isScrolling={isScrolling}
+                      deleteReverseSection={deleteReverseSection}
+                      rowInReverseBlock={rowIndex}
+                    />
+                  ));
                 }
-              
-                // Determine if this row is part of the reverse section
-                const isReverseSection = reverseIndex !== -1 && index >= reverseIndex - 1 && index < reverseIndex + 2;
-                
+
+                let itemNumber = '';
+                const reverseBlockIndex = rows.findIndex(r => r.isReverseBlock);
+                if (reverseBlockIndex === -1 || index < reverseBlockIndex) {
+                  itemNumber = index + 1;
+                } else {
+                  itemNumber = index - 2;
+                }
+
                 return (
                   <DraggableRow
                     key={`row-${index}`}
-                    row={row}
+                    row={rowData}
                     index={index}
                     moveRow={moveRow}
                     handleInputChange={handleInputChange}
                     deleteRow={deleteRow}
                     itemNumber={itemNumber}
-                    isReverseSection={isReverseSection}
+                    isReverseSection={false}
                     columnWidths={columnWidths}
                     onClick={handleRowClick}
                     onInsertClick={handleInsertClick}
                     isScrolling={isScrolling}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
                     deleteReverseSection={deleteReverseSection}
+                    rowInReverseBlock={-1}
                   />
                 );
               })}
