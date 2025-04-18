@@ -437,17 +437,17 @@ footer {
   padding-right: 0;
 }
 
-/* Add bounce animation keyframes */
-@keyframes bounce {
-  0%, 100% {
+/* Replace bounce animation with single shift up */
+@keyframes shiftUp {
+  0% {
     transform: translateY(0);
   }
-  50% {
+  100% {
     transform: translateY(-4px);
   }
 }
 
-/* Apply bounce effect to all clickable elements */
+/* Apply shift up effect to all clickable elements */
 button,
 .btn,
 .program-name,
@@ -465,58 +465,61 @@ button:hover,
 .btn-link:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Override specific button styles to maintain their colors while bouncing */
+/* Override specific button styles to maintain their colors while shifting up */
 button.btn-primary:hover {
   background-color: #8A3D22;
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
 }
 
 button.btn-secondary:hover {
   background-color: #333333;
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
 }
 
 button.btn-info:hover {
   background-color: #138496;
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
 }
 
 button.btn-success:hover {
   background-color: #218838;
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
 }
 
 button.btn-warning:hover {
   background-color: #e0a800;
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
 }
 
 button.btn-danger:hover {
   background-color: #c82333;
-  animation: bounce 0.5s ease infinite;
+  transform: translateY(-4px);
 }
 
-/* Ensure program cards have the bounce effect */
+/* Ensure program cards have the shift up effect */
+.program-card {
+  transition: all 0.3s ease;
+}
+
 .program-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Add bounce to action buttons in the table */
+/* Add shift up to action buttons in the table */
 .action-btn {
   transition: all 0.3s ease;
 }
 
 .action-btn:hover {
-  animation: bounce 0.5s ease infinite;
-  transform: scale(1.1);
+  transform: translateY(-4px) scale(1.1);
 }
 
-/* Ensure the bounce effect doesn't interfere with dragging */
+/* Ensure the shift up effect doesn't interfere with dragging */
 [draggable="true"]:hover {
-  animation: none;
+  transform: none;
 }
