@@ -200,6 +200,26 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
+  // Add this useEffect hook
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setShowInsertPopup(false);
+        setClickedRowIndex(null);
+      }
+    };
+
+    if (showInsertPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInsertPopup]);
+
   // Function to add a new state to history
   const addToHistory = (newRows) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -1109,19 +1129,19 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           
           {/* Insert popup */}
           {showInsertPopup && clickedRowIndex !== null && (
-            <div 
+            <div
               ref={popupRef}
-              className="insert-options" 
-              style={{ 
-                position: 'fixed', 
-                top: `${insertPopupPosition.y}px`, 
-                left: `${insertPopupPosition.x}px`, 
-                transform: 'translate(-50%, -100%)', 
-                padding: '15px', 
+              className="insert-options d-flex flex-column align-items-stretch"
+              style={{
+                position: 'fixed',
+                top: `${insertPopupPosition.y}px`,
+                left: `${insertPopupPosition.x}px`,
+                transform: 'translate(-50%, -100%)',
+                padding: '10px',
                 zIndex: 1000,
                 marginTop: '-10px',
                 animation: 'fadeIn 0.2s ease-in-out',
-                minWidth: '160px'
+                minWidth: '140px'
               }}
             >
               <style>
@@ -1132,25 +1152,25 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                   }
                 `}
               </style>
-              <div className="text-center mb-3">
+              <div className="text-center mb-2">
                 <span className="popup-title">Insert Row</span>
               </div>
               <button
-                className="btn btn-outline-primary btn-sm w-100 mb-2"
+                className="btn btn-outline-primary btn-sm mb-1 d-flex align-items-center justify-content-center"
                 onClick={() => insertRowAbove(clickedRowIndex)}
                 title="Insert a new row above the selected row"
               >
                 <i className="bi bi-arrow-up-circle mr-2"></i> Above
               </button>
               <button
-                className="btn btn-outline-primary btn-sm w-100 mb-2"
+                className="btn btn-outline-primary btn-sm mb-1 d-flex align-items-center justify-content-center"
                 onClick={() => insertRowBelow(clickedRowIndex)}
                 title="Insert a new row below the selected row"
               >
                 <i className="bi bi-arrow-down-circle mr-2"></i> Below
               </button>
-              <button 
-                className="btn btn-outline-secondary btn-sm w-100" 
+              <button
+                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
                 onClick={() => {
                   setClickedRowIndex(null);
                   setShowInsertPopup(false);
