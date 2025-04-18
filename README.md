@@ -16,7 +16,6 @@ Currently deployed at https://ma-fs.github.io/hv-switching-advanced /
 - **PDF Export**: Generate professional PDF documents with custom formatting
 - **Program Management**: Save, load, and manage multiple switching programs
 - **Responsive Design**: Works on desktop and tablet devices
-- **Column Resizing**: Customize your view with resizable columns
 - **Intuitive Controls**: Insert rows above or below, copy from above, and more
 
 ## Getting Started
