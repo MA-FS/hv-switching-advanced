@@ -325,32 +325,50 @@ const App = () => {
               New Program
             </button>
           </div>
-          <div className="mt-3">
-            <h2 className="text-primary mb-3">Saved Programs</h2>
-            {Object.keys(programs).map(programName => (
-              <div className="program-card" key={programName}>
-                <div
-                  className="program-name"
-                  onClick={() => handleLoadProgram(programName)}
-                >
-                  {programName}
-                </div>
-                <div className="program-actions">
-                  <button
-                    className="btn btn-secondary rename-button"
-                    onClick={() => handleRenameProgram(programName)}
-                  >
-                    Rename
-                  </button>
-                  <button
-                    className="btn btn-danger delete-button"
-                    onClick={() => handleDeleteProgram(programName)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="mt-4">
+            <h2 className="text-primary mb-4">Saved Programs</h2>
+            <div className="saved-programs-grid">
+              {Object.keys(programs).length === 0 ? (
+                <div className="no-programs">No saved programs yet. Create one to get started!</div>
+              ) : (
+                Object.keys(programs).map(programName => (
+                  <div className="program-card-modern" key={programName}>
+                    <div className="program-card-header">
+                      <h3 className="program-title">{programName}</h3>
+                    </div>
+                    <div className="program-card-body">
+                      <div className="program-metadata">
+                        <span className="program-last-modified">
+                          {programs[programName].lastModified ? 
+                            `Last modified: ${new Date(programs[programName].lastModified).toLocaleDateString()}` : 
+                            'Recently created'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="program-card-footer">
+                      <button
+                        className="btn btn-primary card-action-btn"
+                        onClick={() => handleLoadProgram(programName)}
+                      >
+                        <i className="fas fa-folder-open"></i> Open
+                      </button>
+                      <button
+                        className="btn btn-secondary card-action-btn"
+                        onClick={() => handleRenameProgram(programName)}
+                      >
+                        <i className="fas fa-edit"></i> Rename
+                      </button>
+                      <button
+                        className="btn btn-danger card-action-btn"
+                        onClick={() => handleDeleteProgram(programName)}
+                      >
+                        <i className="fas fa-trash"></i> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
