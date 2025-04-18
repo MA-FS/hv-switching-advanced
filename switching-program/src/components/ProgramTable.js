@@ -9,7 +9,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const ItemType = 'ROW';
 
-const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling }) => {
+const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling, deleteReverseSection }) => {
   const ref = useRef(null);
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
@@ -24,6 +24,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
         moveRow(item.index, originalIndex);
       }
     },
+    canDrag: () => !isReverseSection, // Prevent dragging rows in the reverse section
   });
 
   const [, drop] = useDrop({
@@ -36,6 +37,11 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       const hoverIndex = index;
 
       if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      // Prevent dropping into the reverse section
+      if (isReverseSection) {
         return;
       }
 
@@ -74,7 +80,8 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       ref={ref} 
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: 'move',
+        cursor: isReverseSection ? 'default' : 'move',
+        backgroundColor: isReverseSection ? 'transparent' : 'inherit',
       }}
       onClick={handleRowClick} // Use the new handler
       className={isReverseSection ? 'reverse-section' : ''}
@@ -91,32 +98,48 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
               value={col}
               onChange={(e) => handleInputChange(e, index, colIndex)}
               style={{ width: '100%' }}
+              disabled={isReverseSection}
             />
           )}
         </td>
       ))}
       <td className="action-column">
         <div className="d-flex justify-content-center">
-          <button 
-            className="btn btn-link text-primary p-0 mr-2 action-btn" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onInsertClick(index, e);
-            }}
-            title="Insert row"
-          >
-            <i className="bi bi-plus-circle-fill"></i>
-          </button>
-          <button 
-            className="btn btn-link text-danger p-0 action-btn" 
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteRow(index);
-            }}
-            title="Delete row"
-          >
-            <i className="bi bi-trash-fill"></i>
-          </button>
+          {isReverseSection && isReverseRow ? (
+            <button 
+              className="btn btn-link text-danger p-0 action-btn" 
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteReverseSection(index);
+              }}
+              title="Delete reverse section"
+            >
+              <i className="bi bi-trash-fill"></i>
+            </button>
+          ) : !isReverseSection ? (
+            <>
+              <button 
+                className="btn btn-link text-primary p-0 mr-2 action-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onInsertClick(index, e);
+                }}
+                title="Insert row"
+              >
+                <i className="bi bi-plus-circle-fill"></i>
+              </button>
+              <button 
+                className="btn btn-link text-danger p-0 action-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteRow(index);
+                }}
+                title="Delete row"
+              >
+                <i className="bi bi-trash-fill"></i>
+              </button>
+            </>
+          ) : null}
         </div>
       </td>
     </tr>
@@ -246,6 +269,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   const addReverseSection = () => {
     if (!hasReverseSection) {
+      // Create a special reverse section block with three rows
       const newRows = [
         Array(columns.length).fill(''),
         ['', '', '', '', 'REVERSE', '', ''],
@@ -287,6 +311,13 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   // Function to handle insert button click
   const handleInsertClick = (index, event) => {
+    // Check if the row is part of the reverse section
+    const reverseIndex = rows.findIndex(isReverseRow);
+    if (reverseIndex !== -1 && (index === reverseIndex || index === reverseIndex - 1 || index === reverseIndex + 1)) {
+      // Don't allow inserting rows into the reverse section
+      return;
+    }
+    
     // Get the position of the mouse cursor
     const x = event.clientX;
     const y = event.clientY;
@@ -329,6 +360,13 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   // Function to insert row above
   const insertRowAbove = (index) => {
+    // Check if the row is part of the reverse section
+    const reverseIndex = rows.findIndex(isReverseRow);
+    if (reverseIndex !== -1 && (index === reverseIndex || index === reverseIndex - 1 || index === reverseIndex + 1)) {
+      // Don't allow inserting rows into the reverse section
+      return;
+    }
+    
     const newRow = Array(columns.length).fill('');
     const newRows = [...rows.slice(0, index), newRow, ...rows.slice(index)];
     setRows(newRows);
@@ -338,6 +376,13 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   const insertRowBelow = (index) => {
+    // Check if the row is part of the reverse section
+    const reverseIndex = rows.findIndex(isReverseRow);
+    if (reverseIndex !== -1 && (index === reverseIndex || index === reverseIndex - 1 || index === reverseIndex + 1)) {
+      // Don't allow inserting rows into the reverse section
+      return;
+    }
+    
     const newRow = Array(columns.length).fill('');
     const newRows = [...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)];
     setRows(newRows);
@@ -347,13 +392,23 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   };
 
   const moveRow = useCallback((dragIndex, hoverIndex) => {
+    // Check if either the drag or hover index is part of the reverse section
+    const reverseIndex = rows.findIndex(isReverseRow);
+    if (reverseIndex !== -1) {
+      if (dragIndex === reverseIndex || dragIndex === reverseIndex - 1 || dragIndex === reverseIndex + 1 ||
+          hoverIndex === reverseIndex || hoverIndex === reverseIndex - 1 || hoverIndex === reverseIndex + 1) {
+        // Don't allow moving rows into or out of the reverse section
+        return;
+      }
+    }
+    
     setRows((prevRows) => {
       const newRows = [...prevRows];
       const [removed] = newRows.splice(dragIndex, 1);
       newRows.splice(hoverIndex, 0, removed);
       return newRows;
     });
-  }, []);
+  }, [rows]);
 
   const handleDragStart = useCallback(() => {
     setIsDragging(true);
@@ -365,8 +420,24 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   }, [rows, setTableData]); // Keep the dependencies
 
   const deleteRow = (rowIndex) => {
+    // Check if the row is part of the reverse section
+    const reverseIndex = rows.findIndex(isReverseRow);
+    if (reverseIndex !== -1 && (rowIndex === reverseIndex || rowIndex === reverseIndex - 1 || rowIndex === reverseIndex + 1)) {
+      // Don't allow deleting individual rows in the reverse section
+      return;
+    }
+    
     const newRows = rows.filter((_, index) => index !== rowIndex);
     setRows(newRows);
+    addToHistory(newRows);
+  };
+
+  // Function to delete the entire reverse section
+  const deleteReverseSection = (reverseRowIndex) => {
+    // Remove all three rows of the reverse section
+    const newRows = rows.filter((_, index) => index < reverseRowIndex - 1 || index > reverseRowIndex + 1);
+    setRows(newRows);
+    setHasReverseSection(false);
     addToHistory(newRows);
   };
 
@@ -693,6 +764,29 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               background-color: #ccc;
               cursor: not-allowed;
             }
+            .reverse-section {
+              background-color: #f8f9fa;
+              position: relative;
+              background-image: linear-gradient(45deg, #f8f9fa 25%, #e9ecef 25%, #e9ecef 50%, #f8f9fa 50%, #f8f9fa 75%, #e9ecef 75%, #e9ecef 100%);
+              background-size: 20px 20px;
+              background-position: 0 0;
+            }
+            .reverse-section:first-of-type {
+              border-top: 2px solid #6c757d;
+            }
+            .reverse-section:last-of-type {
+              border-bottom: 2px solid #6c757d;
+            }
+            .reverse-section td:first-child {
+              border-left: 2px solid #6c757d;
+            }
+            .reverse-section td:last-child {
+              border-right: 2px solid #6c757d;
+            }
+            .reverse-section input {
+              background-color: transparent;
+              cursor: not-allowed;
+            }
           `}
         </style>
         <div className="header-section">
@@ -753,6 +847,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     isScrolling={isScrolling}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
+                    deleteReverseSection={deleteReverseSection}
                   />
                 );
               })}
