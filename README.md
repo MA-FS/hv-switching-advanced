@@ -1,83 +1,120 @@
 # High Voltage Switching Program Creator
 
-This tool allows you to create, edit, and export high voltage switching programs in an intuitive spreadsheet-like interface.
+<img src="switching-program/public/logo.jpg" alt="HV Switching Program Creator Logo" width="200"/>
+
+## Overview
+
+The HV Switching Program Creator is a specialized web application designed for electrical engineers, technicians, and operators to create, edit, and manage high voltage switching programs. It provides an intuitive spreadsheet-like interface that simplifies the complex task of creating detailed switching sequences for high voltage electrical equipment.
 
 Currently deployed at https://ma-fs.github.io/HV-Coach-HV-Switching-Programs/
 
-## Features
-- Dynamic row management: Add, delete, and reorder rows
-- Drag and drop functionality for easy row reordering
-- Resizable columns for customized view
-- Automatic item numbering
-- Reverse section support
-- Export to PDF with custom formatting
-- User-friendly and elegant design
+## Key Features
 
-## How to Use
+- **Dynamic Row Management**: Add, delete, and reorder rows with drag-and-drop functionality
+- **Real-time Collaboration**: Auto-save functionality ensures work is never lost
+- **Reverse Section Support**: Automatically create and manage reverse sequences
+- **PDF Export**: Generate professional PDF documents with custom formatting
+- **Program Management**: Save, load, and manage multiple switching programs
+- **Responsive Design**: Works on desktop and tablet devices
+- **Column Resizing**: Customize your view with resizable columns
+- **Intuitive Controls**: Insert rows above or below, copy from above, and more
+
+## Getting Started
+
+### Installation
 
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start the application: `npm start`
+   ```
+   git clone https://github.com/your-repo/hv-switching-advanced.git
+   cd hv-switching-advanced
+   ```
+
+2. Install dependencies:
+   ```
+   cd switching-program
+   npm install
+   ```
+
+3. Start the application:
+   ```
+   npm start
+   ```
+
 4. Open the application in your browser (usually at `http://localhost:3000`)
 
-### Creating a Switching Program
+## Tips for Developing HV Switching Programs
 
-1. Fill out the information form at the top of the page with relevant details.
-2. Use the table below to create your switching program:
-   - Click "Add Row" to add a new row to the table.
-   - Use "Copy From Above" to duplicate the last row (excluding certain fields).
-   - Click "Reverse" to add a reverse section (can only be done once per program).
+### 1. Program Planning
 
-### Editing the Table
+- **Start with a Clear Objective**: Define the purpose of the switching operation before creating steps
+- **Reference Equipment Diagrams**: Always have up-to-date single-line diagrams available
+- **Follow Standard Sequences**: Use industry-standard sequences for common operations (isolation, earthing, etc.)
+- **Consider Safety First**: Plan verification steps at critical points in the program
 
-- Click and drag column headers to resize them.
-- Click and drag rows to reorder them.
-- Use the delete button (red X) at the end of each row to remove it.
-- The "Type" column automatically converts input to uppercase.
+### 2. Using the Application Effectively
 
-### Reverse Section
+- **Form Information**: Fill out all form fields at the top for proper documentation
+- **Use Consistent Terminology**: Maintain consistent naming conventions for equipment
+- **Item Numbering**: The application automatically handles item numbering, even through reverse sections
+- **Column Organization**:
+  - **Operator**: Person responsible for the specific step
+  - **Location**: Physical location where the action takes place
+  - **kV**: Voltage level of the equipment being operated
+  - **Type**: Type of equipment (CB, DS, ES, etc.)
+  - **Label**: Unique identifier for the equipment
+  - **Instruction**: Detailed description of the action
+  - **Time**: When the action was completed
+  - **Initial**: Operator's initials after completing the action
 
-- The "Reverse" button adds a special reverse section to your program.
-- This section includes a row before and after the "REVERSE" row.
-- Item numbering automatically adjusts for the reverse section.
+### 3. Advanced Features
 
-### Exporting to PDF
+- **Reverse Sections**: Use the "Reverse" button to automatically create the reverse sequence of operations
+- **Creating Complex Programs**:
+  - For parallel operations, create clear demarcations between different paths
+  - Use the insert function to add verification steps at key points
+  - Export to PDF for review before finalizing
+- **Managing Multiple Programs**: 
+  - Save programs with descriptive names
+  - Use the program management features to organize and retrieve programs
 
-1. Click the "Export to PDF" button.
-2. The PDF will be generated with the following features:
-   - Company logo and program title on each page
-   - Form data displayed at the top of the first page
-   - Table contents with appropriate formatting
-   - "REVERSE" text in bold and underlined
-   - Page numbers in the footer
-3. The PDF will be saved with a filename format: `preparedby_program_programno_date.pdf`
+### 4. Best Practices for HV Switching
+
+- **Verification Steps**: Include verification steps between critical operations
+- **Lock-Out Tag-Out (LOTO)**: Document application and removal of locks and tags
+- **Communication Points**: Identify when operators need to communicate with others
+- **Test Points**: Include voltage testing steps before earthing
+- **Emergency Procedures**: Include steps for handling abnormal situations
+
+### 5. PDF Export Tips
+
+- The export feature creates professional PDFs with:
+  - Company logo and program title on each page
+  - Form data displayed at the top of the first page
+  - Table contents with appropriate formatting
+  - "REVERSE" text clearly highlighted
+  - Page numbers in the footer
+- Filename format: `preparedby_program_programno_date.pdf`
+
+## Program Structure
+
+A typical HV switching program follows this structure:
+
+1. **Header Information**: Program details, preparation/authorization information
+2. **Pre-switching Checks**: Safety preparations and equipment checks
+3. **Isolation Sequence**: Steps to isolate the equipment
+4. **Earthing Sequence**: Steps to apply safety earths
+5. **Work Permit**: Issuance of work permit
+6. **Reverse Section**: Steps to return equipment to service
+   - Remove earths
+   - Remove isolation
+   - Restore normal configuration
 
 ## Contributing
 
-Feel free to submit issues or pull requests. We welcome contributions to improve this tool.
+We welcome contributions to improve this tool. Please feel free to submit issues or pull requests.
 
 ## License
 
-This project is licensed under the MIT License
-
-MIT License
+This project is licensed under the MIT License.
 
 Copyright (c) 2024 MA-FS
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
