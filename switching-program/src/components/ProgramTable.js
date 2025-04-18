@@ -85,6 +85,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       }}
       onClick={handleRowClick} // Use the new handler
       className={isReverseSection ? 'reverse-section' : ''}
+      title={isReverseSection ? "Reverse section (not draggable)" : "Click to select, drag to reorder"}
     >
       <td className="item-column">{itemNumber}</td>
       {row.map((col, colIndex) => (
@@ -112,7 +113,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
                 e.stopPropagation();
                 deleteReverseSection(index);
               }}
-              title="Delete reverse section"
+              title="Delete the entire reverse section"
             >
               <i className="bi bi-trash-fill"></i>
             </button>
@@ -124,7 +125,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
                   e.stopPropagation();
                   onInsertClick(index, e);
                 }}
-                title="Insert row"
+                title="Insert a new row at this position"
               >
                 <i className="bi bi-plus-circle-fill"></i>
               </button>
@@ -134,7 +135,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
                   e.stopPropagation();
                   deleteRow(index);
                 }}
-                title="Delete row"
+                title="Delete this row"
               >
                 <i className="bi bi-trash-fill"></i>
               </button>
@@ -154,7 +155,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
       onResize={onResize}
       draggableOpts={{ enableUserSelectHack: false }}
     >
-      <th style={{ width: width + 'px' }}>{children}</th>
+      <th style={{ width: width + 'px' }} title="Drag to resize column">{children}</th>
     </Resizable>
   );
 };
@@ -897,12 +898,14 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               <button
                 className="btn btn-outline-primary btn-sm w-100 mb-2"
                 onClick={() => insertRowAbove(clickedRowIndex)}
+                title="Insert a new row above the selected row"
               >
                 <i className="bi bi-arrow-up-circle mr-1"></i> Above
               </button>
               <button
                 className="btn btn-outline-primary btn-sm w-100 mb-2"
                 onClick={() => insertRowBelow(clickedRowIndex)}
+                title="Insert a new row below the selected row"
               >
                 <i className="bi bi-arrow-down-circle mr-1"></i> Below
               </button>
@@ -912,6 +915,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                   setClickedRowIndex(null);
                   setShowInsertPopup(false);
                 }}
+                title="Cancel row insertion"
               >
                 <i className="bi bi-x-circle mr-1"></i> Cancel
               </button>
@@ -927,20 +931,21 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           >
             <i className="bi bi-arrow-counterclockwise"></i> Undo
           </button>
-          <button className="btn btn-success" onClick={addRow}>
+          <button className="btn btn-success" onClick={addRow} title="Add a new empty row to the table">
             <i className="bi bi-plus-lg mr-1"></i> Add Row
           </button>
-          <button className="btn btn-info" onClick={copyFromAbove}>
+          <button className="btn btn-info" onClick={copyFromAbove} title="Add a new row with data copied from the row above">
             <i className="bi bi-files mr-1"></i> Copy From Above
           </button>
           <button 
             className="btn btn-secondary"
             onClick={addReverseSection}
             disabled={hasReverseSection}
+            title="Add a reverse section to the program (can only be added once)"
           >
             <i className="bi bi-arrow-left-right mr-1"></i> Reverse
           </button>
-          <button className="btn btn-primary" onClick={exportToPDF}>
+          <button className="btn btn-primary" onClick={exportToPDF} title="Export the current program to a PDF document">
             <i className="bi bi-file-earmark-pdf mr-1"></i> Export to PDF
           </button>
         </div>
