@@ -1,0 +1,97 @@
+.info-container {
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  background: white;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+.static-title {
+  font-size: 24px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.name-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.name-field, .program-no-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-number {
+  margin-left: 20px;
+  padding-top: 5px;
+}
+
+.location-section, .work-description-section {
+  margin-bottom: 15px;
+}
+
+.location-section label, .work-description-section label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.main-content {
+  display: flex;
+  gap: 20px;
+}
+
+.signature-sections {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.signature-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.signature-label {
+  width: 100px;
+  font-weight: bold;
+}
+
+.signature-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+}
+
+.signature-fields input {
+  width: 100%;
+}
+
+.reference-drawings {
+  width: 200px;
+  padding-left: 15px;
+  border-left: 1px solid #ccc;
+}
+
+.form-control {
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+label {
+  font-weight: bold;
+} 

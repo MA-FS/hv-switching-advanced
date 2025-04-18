@@ -508,54 +508,143 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         }
       }
 
-      // Add title with dynamic program number
+      // Add title with dynamic program number - centered
       doc.setFontSize(18);
-      doc.setTextColor(168, 75, 42); // #A84B2A Copper tone
-      doc.text(`Switching Program ${formData.programNo || ''}`, pageWidth / 2, margin + (logoSize/2), { align: 'center' }); // Center title vertically with logo
-
-      // Add form data
-      doc.setFontSize(10);
-      doc.setTextColor(46, 46, 46); // #2E2E2E Dark charcoal
-      const formDataFields = [
-        { label: 'Work', value: formData.work || '', width: 2 },
-        { label: 'Site', value: formData.site || '' },
-        { label: 'Permit Number', value: formData.permitNo || '' },
-        { label: 'Reference Drawing', value: formData.referenceDrawing || '' },
-        { label: 'Program No', value: formData.programNo || '' },
-        { label: 'Date', value: formData.date || '' },
-        { label: 'Prepared by', value: formData.preparedBy || '' },
-        { label: 'Time', value: formData.time || '' },
-        { label: 'Switcher', value: formData.switcher || '' },
-        { label: 'Checked By', value: formData.checkedBy || '' },
-        { label: 'Witness', value: formData.witness || '' }
-      ];
-
-      let yPos = margin + logoSize + 5; // Start form data below logo with some padding
-      const colWidth = (pageWidth - 2 * margin) / 3;
-      let colsUsed = 0;
-
-      formDataFields.forEach((field) => {
-        const fieldWidth = field.width || 1;
-        if (colsUsed + fieldWidth > 3) {
-          yPos += 10;
-          colsUsed = 0;
-        }
-        const xPos = margin + colsUsed * colWidth;
-        
-        doc.setFont(undefined, 'bold');
-        doc.text(`${field.label}:`, xPos, yPos);
-        doc.setFont(undefined, 'normal');
-        
-        const maxWidth = colWidth * fieldWidth - 40;
-        const lines = doc.splitTextToSize(field.value || '', maxWidth);
-        doc.text(lines, xPos + 35, yPos);
-        
-        if (lines.length > 1) {
-          yPos += (lines.length - 1) * 5;
-        }
-        
-        colsUsed += fieldWidth;
+      doc.setTextColor(168, 75, 42); // Copper tone color (#A84B2A)
+      const titleY = margin + 10;
+      doc.text("HV Coach SWITCHING PROGRAM", pageWidth / 2, titleY, { 
+        align: 'center'
       });
+
+      // Add horizontal line below the header
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.1);
+      doc.line(margin, titleY + 5, pageWidth - margin, titleY + 5);
+
+      // Start content below the line
+      let yPos = titleY + 15;
+
+      // Add the name and program number section
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      
+      // Calculate positions for right-aligned fields
+      const nameX = pageWidth - margin - 160; // Further right
+      const programNoX = pageWidth - margin - 60; // Even further right
+
+      // Location section first
+      doc.setFont(undefined, 'bold');
+      doc.text("Location:", margin, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(formData.location || '', margin + 30, yPos);
+
+      // NAME field
+      doc.setFont(undefined, 'bold');
+      doc.text("NAME:", nameX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(formData.name || '', nameX + 25, yPos);
+
+      // Program No field
+      doc.setFont(undefined, 'bold');
+      doc.text("Program No:", programNoX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(formData.programNo || '', programNoX + 35, yPos);
+
+      // Work Description section
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text("Work Description:", margin, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(formData.workDescription || '', margin + 50, yPos);
+
+      // Signature sections
+      yPos += 20;
+      const signatureStartY = yPos;
+      const colWidth = 90; // Increased width between sections
+      const labelWidth = 25; // Width for labels (Name, Signature, etc.)
+      const valueOffset = 80; // Space between label and value
+      
+      // Prepared by section
+      doc.setFont(undefined, 'bold');
+      doc.text("Prepared by:", margin, signatureStartY);
+      
+      // Prepared by fields
+      const preparedByX = margin;
+      doc.setFont(undefined, 'normal');
+      
+      // Name field
+      doc.text("Name(print):", preparedByX, signatureStartY + 10);
+      doc.text(formData.preparedByName || '', preparedByX + valueOffset, signatureStartY + 10);
+      
+      // Signature field
+      doc.text("Signature:", preparedByX, signatureStartY + 20);
+      doc.text(formData.preparedBySignature || '', preparedByX + valueOffset, signatureStartY + 20);
+      
+      // Time field
+      doc.text("Time:", preparedByX, signatureStartY + 30);
+      doc.text(formData.preparedByTime || '', preparedByX + valueOffset, signatureStartY + 30);
+      
+      // Date field
+      doc.text("Date:", preparedByX, signatureStartY + 40);
+      doc.text(formData.preparedByDate || '', preparedByX + valueOffset, signatureStartY + 40);
+
+      // Checked by section
+      const checkedByX = margin + colWidth + 20;
+      doc.setFont(undefined, 'bold');
+      doc.text("Checked by:", checkedByX, signatureStartY);
+      
+      // Checked by fields
+      doc.setFont(undefined, 'normal');
+      
+      // Name field
+      doc.text("Name(print):", checkedByX, signatureStartY + 10);
+      doc.text(formData.checkedByName || '', checkedByX + valueOffset, signatureStartY + 10);
+      
+      // Signature field
+      doc.text("Signature:", checkedByX, signatureStartY + 20);
+      doc.text(formData.checkedBySignature || '', checkedByX + valueOffset, signatureStartY + 20);
+      
+      // Time field
+      doc.text("Time:", checkedByX, signatureStartY + 30);
+      doc.text(formData.checkedByTime || '', checkedByX + valueOffset, signatureStartY + 30);
+      
+      // Date field
+      doc.text("Date:", checkedByX, signatureStartY + 40);
+      doc.text(formData.checkedByDate || '', checkedByX + valueOffset, signatureStartY + 40);
+
+      // Authorised section
+      const authorisedX = checkedByX + colWidth + 20;
+      doc.setFont(undefined, 'bold');
+      doc.text("Authorised:", authorisedX, signatureStartY);
+      
+      // Authorised fields
+      doc.setFont(undefined, 'normal');
+      
+      // Name field
+      doc.text("Name(print):", authorisedX, signatureStartY + 10);
+      doc.text(formData.authorisedName || '', authorisedX + valueOffset, signatureStartY + 10);
+      
+      // Signature field
+      doc.text("Signature:", authorisedX, signatureStartY + 20);
+      doc.text(formData.authorisedSignature || '', authorisedX + valueOffset, signatureStartY + 20);
+      
+      // Time field
+      doc.text("Time:", authorisedX, signatureStartY + 30);
+      doc.text(formData.authorisedTime || '', authorisedX + valueOffset, signatureStartY + 30);
+      
+      // Date field
+      doc.text("Date:", authorisedX, signatureStartY + 40);
+      doc.text(formData.authorisedDate || '', authorisedX + valueOffset, signatureStartY + 40);
+
+      // Reference Drawing/s section - moved further right
+      const refDrawingX = pageWidth - margin - 150;
+      doc.setFont(undefined, 'bold');
+      doc.text("Reference Drawing/s", refDrawingX, signatureStartY);
+      doc.setFont(undefined, 'normal');
+      doc.text(formData.referenceDrawings || '', refDrawingX, signatureStartY + 10);
+
+      // Add table starting position
+      const tableStartY = signatureStartY + 50;
 
       console.log('Processing table data...');
       // Convert rows data for autoTable
@@ -591,7 +680,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       autoTable(doc, {
         head: [['Item', ...columns]],
         body: tableRows,
-        startY: yPos + 15,
+        startY: tableStartY,
         theme: 'grid',
         headStyles: {
           fillColor: [46, 46, 46], // #2E2E2E Dark charcoal
@@ -630,13 +719,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               console.error('Error adding logo to new page:', error);
             }
           }
-          doc.setFontSize(18);
-          doc.setTextColor(168, 75, 42); // #A84B2A Copper tone
-          doc.text(`Switching Program ${formData.programNo || ''}`, pageWidth / 2, margin + (logoSize/2), { align: 'center' });
           data.settings.margin.top = margin + logoSize + 5;
           doc.setFontSize(8);
           doc.setTextColor(46, 46, 46); // #2E2E2E Dark charcoal
-          doc.text(`Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+          doc.text(`Page ${data.pageNumber}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
         },
       });
 

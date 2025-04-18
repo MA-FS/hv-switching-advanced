@@ -16,7 +16,23 @@ import './styles.css';
 
 const App = () => {
   const [formData, setFormData] = useState({
-    work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
+    name: '',
+    programNo: '',
+    location: '',
+    workDescription: '',
+    preparedByName: '',
+    preparedBySignature: '',
+    preparedByTime: '',
+    preparedByDate: '',
+    checkedByName: '',
+    checkedBySignature: '',
+    checkedByTime: '',
+    checkedByDate: '',
+    authorisedName: '',
+    authorisedSignature: '',
+    authorisedTime: '',
+    authorisedDate: '',
+    referenceDrawings: ''
   });
   const [tableData, setTableData] = useState([]);
   const [programs, setPrograms] = useState({});
@@ -148,7 +164,23 @@ const App = () => {
         if (programName === currentProgram) {
           setCurrentProgram('');
           setFormData({
-            work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
+            name: '',
+            programNo: '',
+            location: '',
+            workDescription: '',
+            preparedByName: '',
+            preparedBySignature: '',
+            preparedByTime: '',
+            preparedByDate: '',
+            checkedByName: '',
+            checkedBySignature: '',
+            checkedByTime: '',
+            checkedByDate: '',
+            authorisedName: '',
+            authorisedSignature: '',
+            authorisedTime: '',
+            authorisedDate: '',
+            referenceDrawings: ''
           });
           setTableData([]);
         }
@@ -165,7 +197,23 @@ const App = () => {
       onConfirm: () => {
         setCurrentProgram('');
         setFormData({
-          work: '', site: '', permitNo: '', programNo: '', referenceDrawing: '', date: '', preparedBy: '', time: '', switcher: '', checkedBy: '', witness: ''
+          name: '',
+          programNo: '',
+          location: '',
+          workDescription: '',
+          preparedByName: '',
+          preparedBySignature: '',
+          preparedByTime: '',
+          preparedByDate: '',
+          checkedByName: '',
+          checkedBySignature: '',
+          checkedByTime: '',
+          checkedByDate: '',
+          authorisedName: '',
+          authorisedSignature: '',
+          authorisedTime: '',
+          authorisedDate: '',
+          referenceDrawings: ''
         });
         setTableData([]);
         setCurrentProgramName('');
