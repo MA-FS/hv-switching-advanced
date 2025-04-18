@@ -64,7 +64,7 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
 
   drag(drop(ref));
 
-  const isReverseRow = row[4] === 'REVERSE';
+  const isReverseRow = row[5] === 'REVERSE';
 
   // Handle row click with scroll detection
   const handleRowClick = (e) => {
@@ -83,14 +83,14 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
         cursor: isReverseSection ? 'default' : 'move',
         backgroundColor: isReverseSection ? 'transparent' : 'inherit',
       }}
-      onClick={handleRowClick} // Use the new handler
+      onClick={handleRowClick}
       className={isReverseSection ? 'reverse-section' : ''}
       title={isReverseSection ? "Reverse section (not draggable)" : "Click to select, drag to reorder"}
     >
       <td className="item-column">{itemNumber}</td>
       {row.map((col, colIndex) => (
         <td key={colIndex} style={{ width: columnWidths[colIndex] + 'px' }}>
-          {col === 'REVERSE' && colIndex === 4 ? (
+          {col === 'REVERSE' && colIndex === 5 ? (
             <b><u>REVERSE</u></b>
           ) : (
             <input
@@ -104,44 +104,42 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
           )}
         </td>
       ))}
-      <td className="action-column">
-        <div className="d-flex justify-content-center">
-          {isReverseSection && isReverseRow ? (
+      <td className="actions-cell">
+        {isReverseSection && isReverseRow ? (
+          <button 
+            className="btn btn-link text-danger p-0 action-btn" 
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteReverseSection(index);
+            }}
+            title="Delete the entire reverse section"
+          >
+            <i className="bi bi-trash-fill"></i>
+          </button>
+        ) : !isReverseSection ? (
+          <div className="d-flex justify-content-center align-items-center">
+            <button 
+              className="btn btn-link text-primary p-0 mr-2 action-btn" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onInsertClick(index, e);
+              }}
+              title="Insert a new row at this position"
+            >
+              <i className="bi bi-plus-circle-fill"></i>
+            </button>
             <button 
               className="btn btn-link text-danger p-0 action-btn" 
               onClick={(e) => {
                 e.stopPropagation();
-                deleteReverseSection(index);
+                deleteRow(index);
               }}
-              title="Delete the entire reverse section"
+              title="Delete this row"
             >
               <i className="bi bi-trash-fill"></i>
             </button>
-          ) : !isReverseSection ? (
-            <>
-              <button 
-                className="btn btn-link text-primary p-0 mr-2 action-btn" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onInsertClick(index, e);
-                }}
-                title="Insert a new row at this position"
-              >
-                <i className="bi bi-plus-circle-fill"></i>
-              </button>
-              <button 
-                className="btn btn-link text-danger p-0 action-btn" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteRow(index);
-                }}
-                title="Delete this row"
-              >
-                <i className="bi bi-trash-fill"></i>
-              </button>
-            </>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </td>
     </tr>
   );
@@ -167,10 +165,17 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const [lastNumberedIndex, setLastNumberedIndex] = useState(-1);
   const [hasReverseSection, setHasReverseSection] = useState(false);
   const [columns] = useState([
-    'Location', 'Volts', 'Type', 'Identity', 'Instruction', 'Time', 'Witness'
+    'Operator', 'Location', 'kV', 'Type', 'Label', 'Instruction (Action)', 'Time', 'Initial'
   ]);
   const [columnWidths, setColumnWidths] = useState([
-    100, 80, 80, 100, 200, 80, 100
+    80,  // Operator
+    100, // Location
+    60,  // kV
+    60,  // Type
+    80,  // Label
+    200, // Instruction
+    60,  // Time
+    60   // Initial
   ]);
   const touchStart = useRef({ x: 0, y: 0 });
   const [clickedRowIndex, setClickedRowIndex] = useState(null);
@@ -232,7 +237,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     setLastNumberedIndex(lastIndex);
   };
 
-  const isReverseRow = (row) => row[4] === 'REVERSE';
+  const isReverseRow = (row) => row[5] === 'REVERSE';
   const isEmptyRow = (row) => row.every(cell => cell === '');
 
   const checkReverseSection = (currentRows) => {
@@ -614,7 +619,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       // Process table data
       const tableRows = [];
       let itemNumber = 1;
-      const reverseIndex = rows.findIndex(row => row[4] === 'REVERSE');
+      const reverseIndex = rows.findIndex(row => row[5] === 'REVERSE');
 
       rows.forEach((row, index) => {
         let formattedRow;
@@ -661,9 +666,20 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       // Store total pages in a variable that will be accessible in didDrawPage
       const totalPages = calculatedTotalPages;
 
-      // Add main table
+      // Update the main switching program table headers
       autoTable(doc, {
-        head: [['Item', ...columns]],
+        head: [
+          [
+            { content: 'Step', rowSpan: 2 },
+            { content: 'Operator', rowSpan: 2 },
+            { content: 'Location', rowSpan: 2 },
+            { content: 'Apparatus', colSpan: 3 },
+            { content: 'Instruction (Action)', rowSpan: 2 },
+            { content: 'Time', rowSpan: 2 },
+            { content: 'Initial', rowSpan: 2 }
+          ],
+          ['kV', 'Type', 'Label']
+        ],
         body: tableRows,
         startY: tableStartY,
         theme: 'grid',
@@ -672,7 +688,8 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 10,
-          cellPadding: 2
+          cellPadding: 2,
+          halign: 'center'
         },
         styles: {
           fontSize: 9,
@@ -681,14 +698,15 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           lineWidth: 0.1
         },
         columnStyles: {
-          0: { cellWidth: 15 },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 30 },
-          5: { cellWidth: 'auto' },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 25 }
+          0: { cellWidth: 15 },  // Step
+          1: { cellWidth: 25 },  // Operator
+          2: { cellWidth: 30 },  // Location
+          3: { cellWidth: 20 },  // kV
+          4: { cellWidth: 20 },  // Type
+          5: { cellWidth: 25 },  // Label
+          6: { cellWidth: 'auto' }, // Instruction
+          7: { cellWidth: 20 },  // Time
+          8: { cellWidth: 20 }   // Initial
         },
         margin: { left: margin, right: margin },
         didDrawPage: function(data) {
@@ -746,13 +764,14 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         },
         columnStyles: {
           0: { cellWidth: 15 },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 30 },
-          5: { cellWidth: 'auto' },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 25 }
+          1: { cellWidth: 25 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 25 },
+          6: { cellWidth: 'auto' },
+          7: { cellWidth: 20 },
+          8: { cellWidth: 20 }
         },
         // Add specific handling for REVERSE section to maintain consistent spacing
         didParseCell: function(data) {
@@ -837,61 +856,43 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       >
         <style>
           {`
-            .action-column {
-              width: 80px;
-              text-align: center;
-            }
             .item-column {
               width: 50px;
               text-align: center;
             }
-            .action-column .btn-link {
-              padding: 0;
-              margin: 0 5px;
+            .actions-cell {
+              width: 60px !important;
+              padding: 4px !important;
+              vertical-align: middle !important;
+              text-align: center;
+              white-space: nowrap;
             }
-            .action-column .btn-link:hover {
-              opacity: 0.8;
+            .apparatus-header {
+              text-align: center !important;
+              border-bottom: none !important;
+            }
+            .apparatus-subheader {
+              border-top: none !important;
+            }
+            .apparatus-subheader th {
+              border-top: none !important;
+              text-align: center;
             }
             .action-btn {
               transition: transform 0.2s;
+              padding: 0;
+              margin: 0 2px;
             }
             .action-btn:hover {
               transform: scale(1.2);
-            }
-            .insert-options {
-              display: flex;
-              flex-direction: column;
-              gap: 5px;
-              min-width: 150px;
-            }
-            .insert-options button {
-              white-space: nowrap;
             }
             .bi {
               font-size: 1.1rem;
               vertical-align: -0.125em;
             }
-            .action-column .bi {
-              font-size: 1.2rem;
-            }
-            .button-container .bi {
-              margin-right: 0.5rem;
-            }
-            .undo-button {
-              background-color: #6c757d;
-              color: white;
-              border: none;
-              padding: 8px 16px;
-              border-radius: 4px;
-              cursor: pointer;
-              transition: background-color 0.2s;
-            }
-            .undo-button:hover {
-              background-color: #5a6268;
-            }
-            .undo-button:disabled {
-              background-color: #ccc;
-              cursor: not-allowed;
+            thead th {
+              text-align: center;
+              vertical-align: middle !important;
             }
             .reverse-section {
               background-color: #f8f9fa;
@@ -933,17 +934,19 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           <table className="table table-bordered">
             <thead>
               <tr>
-                <th className="item-column">Item</th>
-                {columns.map((col, index) => (
-                  <ResizableHeader
-                    key={index}
-                    width={columnWidths[index]}
-                    onResize={onResize(index)}
-                  >
-                    {col}
-                  </ResizableHeader>
-                ))}
-                <th className="action-column">Actions</th>
+                <th rowSpan="2" className="item-column">Step</th>
+                <th rowSpan="2">Operator</th>
+                <th rowSpan="2">Location</th>
+                <th colSpan="3" className="apparatus-header">Apparatus</th>
+                <th rowSpan="2">Instruction (Action)</th>
+                <th rowSpan="2">Time</th>
+                <th rowSpan="2">Initial</th>
+                <th rowSpan="2" className="actions-cell"></th>
+              </tr>
+              <tr className="apparatus-subheader">
+                <th>kV</th>
+                <th>Type</th>
+                <th>Label</th>
               </tr>
             </thead>
             <tbody>
