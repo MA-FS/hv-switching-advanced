@@ -921,7 +921,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .reverse-text {
               text-align: center;
               font-size: 1.2em;
-              color: #dc3545;
+              color: #A84B2A;
               padding: 8px 0;
               font-weight: bold;
               letter-spacing: 1px;
@@ -930,21 +930,6 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               display: flex;
               align-items: center;
               justify-content: center;
-            }
-            .reverse-text::before,
-            .reverse-text::after {
-              content: '';
-              position: absolute;
-              height: 2px;
-              background-color: #dc3545;
-              width: 30%;
-              top: 50%;
-            }
-            .reverse-text::before {
-              right: 65%;
-            }
-            .reverse-text::after {
-              left: 65%;
             }
             .reverse-section .actions-cell {
               background-color: transparent;
@@ -1036,11 +1021,12 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                 }
 
                 let itemNumber = '';
-                const reverseBlockIndex = rows.findIndex(r => r.isReverseBlock);
-                if (reverseBlockIndex === -1 || index < reverseBlockIndex) {
-                  itemNumber = index + 1;
-                } else {
-                  itemNumber = index - 2;
+                if (!rowData.isReverseBlock) {
+                  const precedingNonReverseCount = rows
+                    .slice(0, index)
+                    .filter(r => !r.isReverseBlock)
+                    .length;
+                  itemNumber = precedingNonReverseCount + 1;
                 }
 
                 return (
