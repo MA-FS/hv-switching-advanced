@@ -853,3 +853,20 @@ h2.text-primary {
 .btn i {
   margin-right: 6px;
 }
+
+/* Readme Splash Modal Styles */
+.readme-splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  overflow-y: auto;
+  padding: 2rem 0;
+  animation: modalFadeIn 0.3s ease-out;
+}

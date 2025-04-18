@@ -6,7 +6,7 @@
 
 The HV Switching Program Creator is a specialized web application designed for electrical engineers, technicians, and operators to create, edit, and manage high voltage switching programs. It provides an intuitive spreadsheet-like interface that simplifies the complex task of creating detailed switching sequences for high voltage electrical equipment.
 
-Currently deployed at https://ma-fs.github.io/HV-Coach-HV-Switching-Programs/
+Currently deployed at https://ma-fs.github.io/hv-switching-advanced /
 
 ## Key Features
 
