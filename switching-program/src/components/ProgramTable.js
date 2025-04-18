@@ -293,15 +293,16 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       return;
     }
     
-    // If it's a regular row, copy as normal
+    // Copy all columns from the row above
     const newRow = [...lastRow];
     
-    const columnsToCopy = [0, 1, 2, 3];
-    for (let i = 0; i < newRow.length; i++) {
-      if (!columnsToCopy.includes(i)) {
-        newRow[i] = '';
-      }
-    }
+    // Option 1: Copy all columns (remove the selective clearing)
+    // const columnsToCopy = [0, 1, 2, 3];
+    // for (let i = 0; i < newRow.length; i++) {
+    //   if (!columnsToCopy.includes(i)) {
+    //     newRow[i] = '';
+    //   }
+    // }
 
     const newRows = [...rows, newRow];
     setRows(newRows);
