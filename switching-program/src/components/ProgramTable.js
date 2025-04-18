@@ -459,37 +459,24 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
   const exportToPDF = async () => {
     try {
-      console.log('Starting PDF generation...');
-      
-      // Create PDF document
       const doc = new jsPDF('landscape', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
       const margin = 10;
+      const copperColor = [168, 75, 42]; // Copper tone color (#A84B2A)
+      const logoSize = 20;
 
-      console.log('Loading logo...');
       // Load logo
       const logoUrl = process.env.PUBLIC_URL + '/logo.jpg';
-      const logoSize = 20; // Square dimensions for logo
-      const logoMargin = margin;
-
+      
       // Load image asynchronously
       let img;
       try {
         img = await new Promise((resolve, reject) => {
           const image = new Image();
           image.crossOrigin = "Anonymous";
-          
-          image.onload = () => {
-            console.log('Logo loaded successfully');
-            resolve(image);
-          };
-          
-          image.onerror = (e) => {
-            console.error('Logo load error:', e);
-            resolve(null);
-          };
-          
+          image.onload = () => resolve(image);
+          image.onerror = (e) => resolve(null);
           image.src = logoUrl;
         });
       } catch (logoError) {
@@ -497,157 +484,134 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         img = null;
       }
 
-      console.log('Adding content to PDF...');
-      
-      // Add logo if available
-      if (img) {
-        try {
-          doc.addImage(img, 'JPEG', logoMargin, logoMargin, logoSize, logoSize);
-        } catch (addImageError) {
-          console.error('Error adding logo to PDF:', addImageError);
+      // Function to add header
+      const addHeader = () => {
+        // Add logo if available
+        if (img) {
+          try {
+            doc.addImage(img, 'JPEG', margin, margin, logoSize, logoSize);
+          } catch (error) {
+            console.error('Error adding logo:', error);
+          }
         }
-      }
 
-      // Add title with dynamic program number - centered
-      doc.setFontSize(18);
-      doc.setTextColor(168, 75, 42); // Copper tone color (#A84B2A)
-      const titleY = margin + 10;
-      doc.text("HV Coach SWITCHING PROGRAM", pageWidth / 2, titleY, { 
-        align: 'center'
+        // Add title
+        doc.setFontSize(16);
+        doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
+        doc.text("HV Coach", margin + logoSize + 5, margin + 8);
+        doc.text("SWITCHING PROGRAM", margin + logoSize + 45, margin + 8);
+
+        // Add name and program number
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        const nameY = margin + 5;
+        doc.text("NAME", pageWidth - 120, nameY);
+        doc.text(formData.name || '', pageWidth - 80, nameY);
+        doc.text("Program No:", pageWidth - 120, nameY + 5);
+        doc.text(formData.programNo || '', pageWidth - 80, nameY + 5);
+      };
+
+      // Function to add page number
+      const addPageNumber = (pageNum, totalPages) => {
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.text(
+          `Page ${pageNum} of ${totalPages}`,
+          pageWidth - margin,
+          pageHeight - margin,
+          { align: 'right' }
+        );
+      };
+
+      // Add first page header
+      addHeader();
+
+      // Location and Work Description table
+      autoTable(doc, {
+        startY: margin + logoSize + 5,
+        body: [
+          [
+            { content: 'Location:', styles: { fontStyle: 'bold' } },
+            { content: formData.location || '' }
+          ],
+          [
+            { content: 'Work Description:', styles: { fontStyle: 'bold' } },
+            { content: formData.workDescription || '' }
+          ]
+        ],
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          cellPadding: 4,
+          lineColor: [128, 128, 128],
+          lineWidth: 0.1
+        },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 'auto' }
+        },
+        margin: { left: margin, right: margin }
       });
 
-      // Add horizontal line below the header
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.1);
-      doc.line(margin, titleY + 5, pageWidth - margin, titleY + 5);
+      // Signature section table with copper tone header
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 5,
+        head: [
+          [
+            { content: '', styles: { fillColor: copperColor } },
+            { content: 'Name(print)', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
+            { content: 'Signature', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
+            { content: 'Time', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
+            { content: 'Date', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
+            { content: 'Reference Drawing/s', styles: { fillColor: copperColor, textColor: [255, 255, 255] } }
+          ]
+        ],
+        body: [
+          [
+            { content: 'Prepared by:', styles: { fontStyle: 'bold' } },
+            formData.preparedByName || '',
+            formData.preparedBySignature || '',
+            formData.preparedByTime || '',
+            formData.preparedByDate || '',
+            { content: formData.referenceDrawings || '', rowSpan: 3 }
+          ],
+          [
+            { content: 'Checked by:', styles: { fontStyle: 'bold' } },
+            formData.checkedByName || '',
+            formData.checkedBySignature || '',
+            formData.checkedByTime || '',
+            formData.checkedByDate || ''
+          ],
+          [
+            { content: 'Authorised:', styles: { fontStyle: 'bold' } },
+            formData.authorisedName || '',
+            formData.authorisedSignature || '',
+            formData.authorisedTime || '',
+            formData.authorisedDate || ''
+          ]
+        ],
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          cellPadding: 2,
+          lineColor: [128, 128, 128],
+          lineWidth: 0.1
+        },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 'auto' },
+          3: { cellWidth: 'auto' },
+          4: { cellWidth: 'auto' },
+          5: { cellWidth: 'auto' }
+        },
+        margin: { left: margin, right: margin }
+      });
 
-      // Start content below the line
-      let yPos = titleY + 15;
-
-      // Add the name and program number section
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
+      // Main switching program table
+      const tableStartY = doc.lastAutoTable.finalY + 5;
       
-      // Calculate positions for right-aligned fields
-      const nameX = pageWidth - margin - 160; // Further right
-      const programNoX = pageWidth - margin - 60; // Even further right
-
-      // Location section first
-      doc.setFont(undefined, 'bold');
-      doc.text("Location:", margin, yPos);
-      doc.setFont(undefined, 'normal');
-      doc.text(formData.location || '', margin + 30, yPos);
-
-      // NAME field
-      doc.setFont(undefined, 'bold');
-      doc.text("NAME:", nameX, yPos);
-      doc.setFont(undefined, 'normal');
-      doc.text(formData.name || '', nameX + 25, yPos);
-
-      // Program No field
-      doc.setFont(undefined, 'bold');
-      doc.text("Program No:", programNoX, yPos);
-      doc.setFont(undefined, 'normal');
-      doc.text(formData.programNo || '', programNoX + 35, yPos);
-
-      // Work Description section
-      yPos += 10;
-      doc.setFont(undefined, 'bold');
-      doc.text("Work Description:", margin, yPos);
-      doc.setFont(undefined, 'normal');
-      doc.text(formData.workDescription || '', margin + 50, yPos);
-
-      // Signature sections
-      yPos += 20;
-      const signatureStartY = yPos;
-      const colWidth = 90; // Increased width between sections
-      const labelWidth = 25; // Width for labels (Name, Signature, etc.)
-      const valueOffset = 80; // Space between label and value
-      
-      // Prepared by section
-      doc.setFont(undefined, 'bold');
-      doc.text("Prepared by:", margin, signatureStartY);
-      
-      // Prepared by fields
-      const preparedByX = margin;
-      doc.setFont(undefined, 'normal');
-      
-      // Name field
-      doc.text("Name(print):", preparedByX, signatureStartY + 10);
-      doc.text(formData.preparedByName || '', preparedByX + valueOffset, signatureStartY + 10);
-      
-      // Signature field
-      doc.text("Signature:", preparedByX, signatureStartY + 20);
-      doc.text(formData.preparedBySignature || '', preparedByX + valueOffset, signatureStartY + 20);
-      
-      // Time field
-      doc.text("Time:", preparedByX, signatureStartY + 30);
-      doc.text(formData.preparedByTime || '', preparedByX + valueOffset, signatureStartY + 30);
-      
-      // Date field
-      doc.text("Date:", preparedByX, signatureStartY + 40);
-      doc.text(formData.preparedByDate || '', preparedByX + valueOffset, signatureStartY + 40);
-
-      // Checked by section
-      const checkedByX = margin + colWidth + 20;
-      doc.setFont(undefined, 'bold');
-      doc.text("Checked by:", checkedByX, signatureStartY);
-      
-      // Checked by fields
-      doc.setFont(undefined, 'normal');
-      
-      // Name field
-      doc.text("Name(print):", checkedByX, signatureStartY + 10);
-      doc.text(formData.checkedByName || '', checkedByX + valueOffset, signatureStartY + 10);
-      
-      // Signature field
-      doc.text("Signature:", checkedByX, signatureStartY + 20);
-      doc.text(formData.checkedBySignature || '', checkedByX + valueOffset, signatureStartY + 20);
-      
-      // Time field
-      doc.text("Time:", checkedByX, signatureStartY + 30);
-      doc.text(formData.checkedByTime || '', checkedByX + valueOffset, signatureStartY + 30);
-      
-      // Date field
-      doc.text("Date:", checkedByX, signatureStartY + 40);
-      doc.text(formData.checkedByDate || '', checkedByX + valueOffset, signatureStartY + 40);
-
-      // Authorised section
-      const authorisedX = checkedByX + colWidth + 20;
-      doc.setFont(undefined, 'bold');
-      doc.text("Authorised:", authorisedX, signatureStartY);
-      
-      // Authorised fields
-      doc.setFont(undefined, 'normal');
-      
-      // Name field
-      doc.text("Name(print):", authorisedX, signatureStartY + 10);
-      doc.text(formData.authorisedName || '', authorisedX + valueOffset, signatureStartY + 10);
-      
-      // Signature field
-      doc.text("Signature:", authorisedX, signatureStartY + 20);
-      doc.text(formData.authorisedSignature || '', authorisedX + valueOffset, signatureStartY + 20);
-      
-      // Time field
-      doc.text("Time:", authorisedX, signatureStartY + 30);
-      doc.text(formData.authorisedTime || '', authorisedX + valueOffset, signatureStartY + 30);
-      
-      // Date field
-      doc.text("Date:", authorisedX, signatureStartY + 40);
-      doc.text(formData.authorisedDate || '', authorisedX + valueOffset, signatureStartY + 40);
-
-      // Reference Drawing/s section - moved further right
-      const refDrawingX = pageWidth - margin - 150;
-      doc.setFont(undefined, 'bold');
-      doc.text("Reference Drawing/s", refDrawingX, signatureStartY);
-      doc.setFont(undefined, 'normal');
-      doc.text(formData.referenceDrawings || '', refDrawingX, signatureStartY + 10);
-
-      // Add table starting position
-      const tableStartY = signatureStartY + 50;
-
-      console.log('Processing table data...');
-      // Convert rows data for autoTable
+      // Process table data
       const tableRows = [];
       let itemNumber = 1;
       const reverseIndex = rows.findIndex(row => row[4] === 'REVERSE');
@@ -675,68 +639,120 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         }
       });
 
-      console.log('Generating table in PDF...');
-      // Add table with autoTable plugin
+      // Calculate available height for table content
+      const firstPageContentHeight = pageHeight - tableStartY - margin;
+      const subsequentPagesContentHeight = pageHeight - (margin + 15) - margin; // Account for header and margins
+      
+      // Calculate approximate rows per page based on row height
+      const rowHeight = 12; // Approximate height of each row in mm
+      const firstPageRows = Math.floor(firstPageContentHeight / rowHeight);
+      const subsequentPagesRows = Math.floor(subsequentPagesContentHeight / rowHeight);
+      
+      // Calculate total pages more accurately
+      let remainingRows = tableRows.length;
+      let calculatedTotalPages = 1;
+      remainingRows -= firstPageRows;
+      
+      while (remainingRows > 0) {
+        calculatedTotalPages++;
+        remainingRows -= subsequentPagesRows;
+      }
+
+      // Store total pages in a variable that will be accessible in didDrawPage
+      const totalPages = calculatedTotalPages;
+
+      // Add main table
       autoTable(doc, {
         head: [['Item', ...columns]],
         body: tableRows,
         startY: tableStartY,
         theme: 'grid',
         headStyles: {
-          fillColor: [46, 46, 46], // #2E2E2E Dark charcoal
-          textColor: [247, 247, 247], // #F7F7F7 Off-white
+          fillColor: [46, 46, 46],
+          textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 10
-        },
-        alternateRowStyles: {
-          fillColor: [247, 247, 247] // #F7F7F7 Light background
+          fontSize: 10,
+          cellPadding: 2
         },
         styles: {
+          fontSize: 9,
           cellPadding: 2,
-          fontSize: 8,
-          valign: 'middle',
-          overflow: 'linebreak',
-          cellWidth: 'wrap',
-          textColor: [46, 46, 46], // #2E2E2E Dark charcoal
-          lineColor: [212, 212, 212], // #D4D4D4 Border color
+          lineColor: [128, 128, 128],
           lineWidth: 0.1
         },
         columnStyles: {
           0: { cellWidth: 15 },
           1: { cellWidth: 30 },
           2: { cellWidth: 20 },
-          3: { cellWidth: 20 },
+          3: { cellWidth: 25 },
           4: { cellWidth: 30 },
           5: { cellWidth: 'auto' },
           6: { cellWidth: 20 },
-          7: { cellWidth: 30 },
+          7: { cellWidth: 25 }
         },
+        margin: { left: margin, right: margin },
         didDrawPage: function(data) {
-          if (img) {
-            try {
-              doc.addImage(img, 'JPEG', logoMargin, logoMargin, logoSize, logoSize);
-            } catch (error) {
-              console.error('Error adding logo to new page:', error);
+          // For pages after the first page
+          if (data.pageNumber > 1) {
+            // Clear the header area with minimal height
+            doc.setFillColor(255, 255, 255);
+            doc.rect(0, 0, pageWidth, margin + 8, 'F');
+            
+            // Add header with minimal spacing
+            doc.setFontSize(12);
+            if (img) {
+              try {
+                doc.addImage(img, 'JPEG', margin, margin - 5, logoSize * 0.5, logoSize * 0.5);
+              } catch (error) {
+                console.error('Error adding logo:', error);
+              }
             }
+
+            // Add title with minimal spacing
+            doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
+            doc.text("HV Coach", margin + (logoSize * 0.5) + 5, margin + 2);
+            doc.text("SWITCHING PROGRAM", margin + (logoSize * 0.5) + 35, margin + 2);
+
+            // Add name and program number with minimal spacing
+            doc.setFontSize(8);
+            doc.setTextColor(0);
+            const nameY = margin;
+            doc.text("NAME", pageWidth - 120, nameY);
+            doc.text(formData.name || '', pageWidth - 80, nameY);
+            doc.text("Program No:", pageWidth - 120, nameY + 3);
+            doc.text(formData.programNo || '', pageWidth - 80, nameY + 3);
           }
-          data.settings.margin.top = margin + logoSize + 5;
-          doc.setFontSize(8);
-          doc.setTextColor(46, 46, 46); // #2E2E2E Dark charcoal
-          doc.text(`Page ${data.pageNumber}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+          
+          // Add page number (for all pages)
+          doc.setFontSize(10);
+          doc.setTextColor(0);
+          const pageNumberText = `Page ${data.pageNumber} of ${totalPages}`;
+          doc.text(
+            pageNumberText,
+            pageWidth - margin,
+            pageHeight - margin,
+            { align: 'right' }
+          );
         },
+        willDrawPage: function(data) {
+          if (data.pageNumber === 1) {
+            data.settings.margin.top = tableStartY;
+          } else {
+            data.settings.margin.top = margin + 5;
+          }
+          data.settings.margin.left = margin;
+          data.settings.margin.right = margin;
+          data.settings.margin.bottom = margin + 10;
+        }
       });
 
-      console.log('Preparing to save PDF...');
-      // Create filename
-      const preparedBy = (formData.preparedBy || 'Unknown').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      // Save PDF
+      const preparedBy = (formData.preparedByName || 'Unknown').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const programNo = (formData.programNo || 'NoNumber').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const currentDate = new Date().toISOString().split('T')[0];
       const filename = `${preparedBy}_program_${programNo}_${currentDate}.pdf`;
 
-      // Save PDF
-      console.log('Saving PDF as:', filename);
       doc.save(filename);
-      console.log('PDF generation completed successfully');
     } catch (error) {
       console.error('Detailed error in PDF generation:', error);
       alert('There was an error generating the PDF. Please check the browser console for details and try again.');
