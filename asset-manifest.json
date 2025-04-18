@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/hv-switching-advanced/static/css/main.3dc2ef42.css",
+    "main.js": "/hv-switching-advanced/static/js/main.ce5007ae.js",
+    "static/js/239.bb8a80c9.chunk.js": "/hv-switching-advanced/static/js/239.bb8a80c9.chunk.js",
+    "static/js/213.3ad6c99d.chunk.js": "/hv-switching-advanced/static/js/213.3ad6c99d.chunk.js",
+    "static/js/732.dfb8d6ed.chunk.js": "/hv-switching-advanced/static/js/732.dfb8d6ed.chunk.js",
+    "static/media/bootstrap-icons.woff?": "/hv-switching-advanced/static/media/bootstrap-icons.39795c0b4513de014cf8.woff",
+    "static/media/bootstrap-icons.woff2?": "/hv-switching-advanced/static/media/bootstrap-icons.b7bcc075b395c14ce8c2.woff2",
+    "static/media/glyphicons-halflings-regular.svg": "/hv-switching-advanced/static/media/glyphicons-halflings-regular.060b2710bdbbe3dfe48b.svg",
+    "static/media/glyphicons-halflings-regular.ttf": "/hv-switching-advanced/static/media/glyphicons-halflings-regular.4692b9ec53fd5972caa2.ttf",
+    "static/media/glyphicons-halflings-regular.woff": "/hv-switching-advanced/static/media/glyphicons-halflings-regular.82b1212e45a2bc35dd73.woff",
+    "static/media/glyphicons-halflings-regular.eot": "/hv-switching-advanced/static/media/glyphicons-halflings-regular.5be1347c682810f199c7.eot",
+    "static/media/glyphicons-halflings-regular.woff2": "/hv-switching-advanced/static/media/glyphicons-halflings-regular.be810be3a3e14c682a25.woff2",
+    "index.html": "/hv-switching-advanced/index.html",
+    "main.3dc2ef42.css.map": "/hv-switching-advanced/static/css/main.3dc2ef42.css.map",
+    "main.ce5007ae.js.map": "/hv-switching-advanced/static/js/main.ce5007ae.js.map",
+    "239.bb8a80c9.chunk.js.map": "/hv-switching-advanced/static/js/239.bb8a80c9.chunk.js.map",
+    "213.3ad6c99d.chunk.js.map": "/hv-switching-advanced/static/js/213.3ad6c99d.chunk.js.map",
+    "732.dfb8d6ed.chunk.js.map": "/hv-switching-advanced/static/js/732.dfb8d6ed.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3dc2ef42.css",
+    "static/js/main.ce5007ae.js"
+  ]
+}
