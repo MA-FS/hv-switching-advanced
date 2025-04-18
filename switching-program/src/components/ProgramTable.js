@@ -75,6 +75,35 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     onClick(index);
   };
 
+  // If this is a REVERSE row, render a special full-width row
+  if (isReverseSection && isReverseRow) {
+    return (
+      <tr 
+        ref={ref} 
+        className="reverse-row"
+        onClick={handleRowClick}
+      >
+        <td colSpan="10" className="reverse-cell">
+          <div className="reverse-divider">
+            <span className="reverse-text">REVERSE</span>
+            {showDeleteButton && (
+              <button 
+                className="btn btn-link p-0 delete-reverse-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteReverseSection(index - 1);
+                }}
+                title="Delete the entire reverse section"
+              >
+                <i className="bi bi-trash-fill"></i>
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <tr 
       ref={ref} 
@@ -89,35 +118,18 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       <td className="item-column">{isReverseSection ? '' : itemNumber}</td>
       {row.map((col, colIndex) => (
         <td key={colIndex} style={{ width: columnWidths[colIndex] + 'px' }}>
-          {col === 'REVERSE' && colIndex === 5 ? (
-            <div className="reverse-text">
-              REVERSE
-            </div>
-          ) : (
-            <input
-              type="text"
-              className={`form-control ${isReverseSection ? 'reverse-input' : ''}`}
-              value={col}
-              onChange={(e) => handleInputChange(e, index, colIndex)}
-              style={{ width: '100%' }}
-              disabled={isReverseSection}
-            />
-          )}
+          <input
+            type="text"
+            className={`form-control ${isReverseSection ? 'reverse-input' : ''}`}
+            value={col}
+            onChange={(e) => handleInputChange(e, index, colIndex)}
+            style={{ width: '100%' }}
+            disabled={isReverseSection}
+          />
         </td>
       ))}
       <td className="actions-cell">
-        {showDeleteButton ? (
-          <button 
-            className="btn btn-link p-0 action-btn" 
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteReverseSection(index - 1);
-            }}
-            title="Delete the entire reverse section"
-          >
-            <i className="bi bi-trash-fill"></i>
-          </button>
-        ) : !isReverseSection ? (
+        {!isReverseSection ? (
           <div className="d-flex justify-content-center align-items-center">
             <button 
               className="btn btn-link text-primary p-0 mr-2 action-btn" 
@@ -269,6 +281,19 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     }
 
     const lastRow = rows[rows.length - 1];
+    
+    // Check if the last row is a reverse block and handle accordingly
+    if (lastRow.isReverseBlock) {
+      // If it's a reverse block, create a new empty row
+      const newRow = Array(columns.length).fill('');
+      const newRows = [...rows, newRow];
+      setRows(newRows);
+      setTableData(newRows);
+      addToHistory(newRows);
+      return;
+    }
+    
+    // If it's a regular row, copy as normal
     const newRow = [...lastRow];
     
     const columnsToCopy = [0, 1, 2, 3];
@@ -884,30 +909,11 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
               vertical-align: middle !important;
             }
             .reverse-section {
-              position: relative;
-              background: repeating-linear-gradient(
-                45deg,
-                #f8f9fa,
-                #f8f9fa 10px,
-                #e9ecef 10px,
-                #e9ecef 20px
-              );
+              background-color: #f8f9fa;
               transition: all 0.3s ease;
             }
             .reverse-section td {
               border-color: #adb5bd !important;
-            }
-            .reverse-section:first-of-type {
-              border-top: 2px solid #6c757d;
-            }
-            .reverse-section:last-of-type {
-              border-bottom: 2px solid #6c757d;
-            }
-            .reverse-section td:first-child {
-              border-left: 2px solid #6c757d;
-            }
-            .reverse-section td:last-child {
-              border-right: 2px solid #6c757d;
             }
             .reverse-section input {
               background-color: transparent;
@@ -918,44 +924,55 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .reverse-section input:disabled {
               color: #495057;
             }
+            
+            /* New styles for the redesigned reverse row */
+            .reverse-row {
+              background-color: transparent !important;
+              border: none !important;
+              border-left: none !important;
+              border-right: none !important;
+            }
+            .reverse-row td {
+              border-left: none !important;
+              border-right: none !important;
+              border-collapse: collapse !important;
+            }
+            .reverse-cell {
+              padding: 0 !important;
+              position: relative;
+              border: none !important;
+              border-left: none !important;
+              border-right: none !important;
+            }
+            .reverse-divider {
+              height: 40px;
+              width: 100%;
+              border-top: 2px solid #A84B2A;
+              border-bottom: 2px solid #A84B2A;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              background-color: #f8f9fa;
+            }
             .reverse-text {
               text-align: center;
               font-size: 1.2em;
               color: #A84B2A;
-              padding: 8px 0;
               font-weight: bold;
               letter-spacing: 1px;
               text-transform: uppercase;
-              position: relative;
-              display: flex;
-              align-items: center;
-              justify-content: center;
             }
-            .reverse-section .actions-cell {
-              background-color: transparent;
-            }
-            .reverse-section .action-btn {
+            .delete-reverse-btn {
               position: absolute;
-              right: 10px;
-              top: 50%;
-              transform: translateY(-50%);
-              background-color: rgba(255, 255, 255, 0.9);
-              border-radius: 50%;
-              width: 32px;
-              height: 32px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              border: 1px solid #dc3545;
-            }
-            .reverse-section .action-btn:hover {
-              transform: translateY(-50%) scale(1.1);
-              box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-            }
-            .reverse-section .action-btn i {
+              right: 15px;
               color: #dc3545;
-              font-size: 1.2em;
+              background-color: transparent;
+              border: none;
+            }
+            .delete-reverse-btn:hover {
+              color: #bd2130;
+              transform: scale(1.2);
             }
             .reverse-input {
               background-color: transparent !important;
