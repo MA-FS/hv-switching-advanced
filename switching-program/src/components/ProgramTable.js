@@ -243,6 +243,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     const newRow = Array(columns.length).fill('');
     const newRows = [...rows, newRow];
     setRows(newRows);
+    setTableData(newRows);
     addToHistory(newRows);
   };
 
@@ -264,6 +265,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
 
     const newRows = [...rows, newRow];
     setRows(newRows);
+    setTableData(newRows);
     addToHistory(newRows);
   };
 
@@ -277,6 +279,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       ];
       const updatedRows = [...rows, ...newRows];
       setRows(updatedRows);
+      setTableData(updatedRows);
       setHasReverseSection(true);
       addToHistory(updatedRows);
     }
@@ -297,6 +300,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       return row;
     });
     setRows(newRows);
+    setTableData(newRows);
     addToHistory(newRows);
   };
 
@@ -370,6 +374,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     const newRow = Array(columns.length).fill('');
     const newRows = [...rows.slice(0, index), newRow, ...rows.slice(index)];
     setRows(newRows);
+    setTableData(newRows);
     setClickedRowIndex(null);
     setShowInsertPopup(false);
     addToHistory(newRows);
@@ -386,6 +391,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     const newRow = Array(columns.length).fill('');
     const newRows = [...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)];
     setRows(newRows);
+    setTableData(newRows);
     setClickedRowIndex(null);
     setShowInsertPopup(false);
     addToHistory(newRows);
@@ -406,9 +412,10 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       const newRows = [...prevRows];
       const [removed] = newRows.splice(dragIndex, 1);
       newRows.splice(hoverIndex, 0, removed);
+      setTableData(newRows);
       return newRows;
     });
-  }, [rows]);
+  }, [rows, setTableData]);
 
   const handleDragStart = useCallback(() => {
     setIsDragging(true);
@@ -417,7 +424,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
     setTableData(rows);
-  }, [rows, setTableData]); // Keep the dependencies
+  }, [rows, setTableData]);
 
   const deleteRow = (rowIndex) => {
     // Check if the row is part of the reverse section
@@ -429,6 +436,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     
     const newRows = rows.filter((_, index) => index !== rowIndex);
     setRows(newRows);
+    setTableData(newRows);
     addToHistory(newRows);
   };
 
@@ -437,6 +445,7 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     // Remove all three rows of the reverse section
     const newRows = rows.filter((_, index) => index < reverseRowIndex - 1 || index > reverseRowIndex + 1);
     setRows(newRows);
+    setTableData(newRows);
     setHasReverseSection(false);
     addToHistory(newRows);
   };

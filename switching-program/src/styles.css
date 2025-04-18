@@ -579,18 +579,109 @@ button.btn-danger:hover {
 }
 
 .auto-save-status {
-  margin-left: 10px;
-  padding: 5px 10px;
-  background-color: #4CAF50;
-  color: white;
-  border-radius: 4px;
-  font-size: 14px;
-  animation: fadeInOut 3s ease-in-out;
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
 }
 
-@keyframes fadeInOut {
-  0% { opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
+.auto-save-status.saving {
+  color: #007bff;
+}
+
+.auto-save-status.saving::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background-color: #007bff;
+  animation: pulse 1.5s infinite;
+}
+
+.auto-save-status.saved {
+  color: #28a745;
+}
+
+.auto-save-status.saved::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background-color: #28a745;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(0, 123, 255, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
+}
+
+.floating-buttons {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: rgba(248, 249, 250, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px 20px;
+  animation: slideDown 0.3s ease-out;
+  border-bottom: 1px solid #D4D4D4;
+  transition: opacity 0.2s ease;
+}
+
+.floating-buttons.scrolling {
+  opacity: 0.7;
+}
+
+.floating-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.floating-content h4 {
+  margin: 0;
+  padding: 8px 15px;
+  background-color: #A84B2A;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(168, 75, 42, 0.2);
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.floating-content button {
+  padding: 8px 15px;
+  font-size: 0.9rem;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }

@@ -10,6 +10,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import SaveConfirmation from './components/SaveConfirmation';
 import ReadmeSplash from './components/ReadmeSplash';
 import ConfirmationModal from './components/ConfirmationModal';
+import FloatingButtons from './components/FloatingButtons';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
 
@@ -23,7 +24,7 @@ const App = () => {
   const [currentProgram, setCurrentProgram] = useState('');
   const [saveConfirmation, setSaveConfirmation] = useState(false);
   const [showReadme, setShowReadme] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
   const [confirmationModal, setConfirmationModal] = useState({
     show: false,
     title: '',
@@ -113,6 +114,12 @@ const App = () => {
         setFormData(program.formData);
         setTableData(program.tableData);
         setCurrentProgram(programName);
+        
+        // Force an immediate autosave after loading a program
+        setTimeout(() => {
+          debouncedAutoSave(program.formData, program.tableData, programName);
+        }, 100);
+        
         setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
       }
     });
@@ -177,30 +184,32 @@ const App = () => {
     setShowReadme(!showReadme);
   };
 
-  // Create a debounced auto-save function
+  // Debounced auto-save function
   const debouncedAutoSave = useCallback(
-    debounce((formData, tableData, currentProgram) => {
-      if (currentProgram && Object.keys(formData).some(key => formData[key])) {
-        const serializedTableData = JSON.parse(JSON.stringify(tableData));
-        setPrograms(prevPrograms => ({
-          ...prevPrograms,
-          [currentProgram]: { formData, tableData: serializedTableData }
-        }));
-        setAutoSaveStatus('Auto-saved');
-        setTimeout(() => setAutoSaveStatus(''), 3000);
+    debounce((formData, tableData, programName) => {
+      if (programName && formData && tableData) {
+        setAutoSaveStatus('saving');
+        const updatedPrograms = {
+          ...programs,
+          [programName]: {
+            formData,
+            tableData,
+            lastModified: new Date().toISOString()
+          }
+        };
+        setPrograms(updatedPrograms);
+        localStorage.setItem('savedPrograms', JSON.stringify(updatedPrograms));
+        setAutoSaveStatus('saved');
       }
-    }, 2000),
-    []
+    }, 1000),
+    [programs]
   );
 
   // Effect to trigger auto-save when form data or table data changes
   useEffect(() => {
-    if (currentProgram) {
+    if (currentProgram && formData && tableData) {
       debouncedAutoSave(formData, tableData, currentProgram);
     }
-    return () => {
-      debouncedAutoSave.cancel();
-    };
   }, [formData, tableData, currentProgram, debouncedAutoSave]);
 
   return (
@@ -213,9 +222,9 @@ const App = () => {
             <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
               Save Current Program
             </button>
-            {autoSaveStatus && (
-              <span className="auto-save-status">{autoSaveStatus}</span>
-            )}
+            <span className={`auto-save-status ${autoSaveStatus}`}>
+              {autoSaveStatus === 'saving' ? 'Saving...' : 'All changes saved'}
+            </span>
           </div>
           <div className="right-content">
             <button className="btn btn-info" onClick={handleToggleReadme}>
@@ -280,6 +289,11 @@ const App = () => {
         message={confirmationModal.message}
         onConfirm={confirmationModal.onConfirm}
         onCancel={() => setConfirmationModal({ show: false, title: '', message: '', onConfirm: null })}
+      />
+      <FloatingButtons 
+        currentProgram={currentProgram}
+        handleUpdateCurrentProgram={handleUpdateCurrentProgram}
+        autoSaveStatus={autoSaveStatus}
       />
     </DndProvider>
   );
