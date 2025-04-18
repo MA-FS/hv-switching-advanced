@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import localforage from 'localforage';
+import { debounce } from 'lodash';
 import Header from './components/Header';
 import InfoForm from './components/InfoForm';
 import ProgramTable from './components/ProgramTable';
@@ -22,6 +23,7 @@ const App = () => {
   const [currentProgram, setCurrentProgram] = useState('');
   const [saveConfirmation, setSaveConfirmation] = useState(false);
   const [showReadme, setShowReadme] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState('');
   const [confirmationModal, setConfirmationModal] = useState({
     show: false,
     title: '',
@@ -175,6 +177,32 @@ const App = () => {
     setShowReadme(!showReadme);
   };
 
+  // Create a debounced auto-save function
+  const debouncedAutoSave = useCallback(
+    debounce((formData, tableData, currentProgram) => {
+      if (currentProgram && Object.keys(formData).some(key => formData[key])) {
+        const serializedTableData = JSON.parse(JSON.stringify(tableData));
+        setPrograms(prevPrograms => ({
+          ...prevPrograms,
+          [currentProgram]: { formData, tableData: serializedTableData }
+        }));
+        setAutoSaveStatus('Auto-saved');
+        setTimeout(() => setAutoSaveStatus(''), 3000);
+      }
+    }, 2000),
+    []
+  );
+
+  // Effect to trigger auto-save when form data or table data changes
+  useEffect(() => {
+    if (currentProgram) {
+      debouncedAutoSave(formData, tableData, currentProgram);
+    }
+    return () => {
+      debouncedAutoSave.cancel();
+    };
+  }, [formData, tableData, currentProgram, debouncedAutoSave]);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <Header />
@@ -185,6 +213,9 @@ const App = () => {
             <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
               Save Current Program
             </button>
+            {autoSaveStatus && (
+              <span className="auto-save-status">{autoSaveStatus}</span>
+            )}
           </div>
           <div className="right-content">
             <button className="btn btn-info" onClick={handleToggleReadme}>
