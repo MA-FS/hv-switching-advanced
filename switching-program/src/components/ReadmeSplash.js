@@ -13,6 +13,7 @@ const customStyles = {
     color: '#F7F7F7',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
     border: '1px solid #222222',
+    fontSize: '1.25rem',
   },
   header: {
     backgroundColor: '#222222',
@@ -31,7 +32,7 @@ const customStyles = {
   heading: {
     color: '#F7F7F7',
     margin: '0',
-    fontSize: '1.8rem',
+    fontSize: '2.2rem',
     textTransform: 'uppercase',
     letterSpacing: '1px'
   },
@@ -47,11 +48,11 @@ const customStyles = {
     borderBottom: '2px solid #222222',
     paddingBottom: '0.5rem',
     marginBottom: '1rem',
-    fontSize: '1.4rem'
+    fontSize: '1.8rem'
   },
   subSectionTitle: {
     color: '#F7F7F7',
-    fontSize: '1.1rem',
+    fontSize: '1.5rem',
     marginTop: '1.2rem',
     marginBottom: '0.8rem',
     fontWeight: '600'
@@ -59,16 +60,18 @@ const customStyles = {
   list: {
     marginLeft: '1.5rem',
     marginBottom: '1rem',
-    color: '#E0E0E0'
+    color: '#E0E0E0',
+    fontSize: '1.25rem'
   },
   listItem: {
     marginBottom: '0.5rem',
-    lineHeight: '1.5'
+    lineHeight: '1.6'
   },
   copperText: {
     color: '#C27E5F',
     fontWeight: '600',
-    marginBottom: '0.8rem'
+    marginBottom: '0.8rem',
+    fontSize: '1.4rem'
   },
   button: {
     backgroundColor: '#B06745',

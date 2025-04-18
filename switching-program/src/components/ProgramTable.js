@@ -916,13 +916,16 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             .action-btn {
               transition: transform 0.2s;
               padding: 0;
-              margin: 0 2px;
+              margin: 0 3px;
+            }
+            .delete-reverse-btn i.bi {
+              font-size: 1.6rem;
             }
             .action-btn:hover {
               transform: scale(1.2);
             }
             .bi {
-              font-size: 1.1rem;
+              font-size: 1.6rem;
               vertical-align: -0.125em;
             }
             thead th {

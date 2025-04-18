@@ -17,7 +17,7 @@
 }
 
 .static-title {
-  font-size: 24px;
+  font-size: 28px;
   margin: 0;
   font-weight: bold;
   color: var(--copper-light);
@@ -37,6 +37,7 @@
 .name-field label, .program-no-field label {
   color: var(--off-white);
   font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .page-number {
@@ -54,6 +55,7 @@
   font-weight: 600;
   margin-bottom: 5px;
   color: var(--off-white);
+  font-size: 1.1rem;
 }
 
 .main-content {
@@ -78,6 +80,7 @@
   width: 100px;
   font-weight: 600;
   color: var(--off-white);
+  font-size: 1.1rem;
 }
 
 .signature-fields {
@@ -93,6 +96,8 @@
   color: var(--off-white);
   border: 1px solid var(--charcoal-dark);
   transition: all 0.2s ease;
+  font-size: 1.2rem !important;
+  height: 42px;
 }
 
 .signature-fields input:focus {
@@ -114,11 +119,13 @@
 
 .form-control {
   border: 1px solid var(--charcoal-dark);
-  padding: 5px 10px;
+  padding: 8px 12px;
   border-radius: 4px;
   background-color: var(--bg-input);
   color: var(--off-white);
   box-shadow: var(--shadow-inset);
+  font-size: 1.2rem !important;
+  height: 42px;
 }
 
 .form-control:focus {
@@ -129,6 +136,11 @@
 
 .form-control::placeholder {
   color: var(--medium-gray);
+}
+
+input[type="text"].form-control {
+  font-size: 1.2rem !important;
+  height: 42px;
 }
 
 label {
