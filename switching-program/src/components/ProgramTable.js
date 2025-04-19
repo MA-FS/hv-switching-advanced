@@ -1583,6 +1583,12 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                     <i className="bi bi-arrow-down"></i> Below
                   </button>
                   <button 
+                    onClick={() => copyCurrentRow(clickedRowIndex)} 
+                    className="btn btn-outline-primary btn-sm my-1"
+                  >
+                    <i className="bi bi-files"></i> Copy Below
+                  </button>
+                  <button 
                     onClick={() => {
                       setClickedRowIndex(null);
                       setShowInsertPopup(false);
@@ -1606,6 +1612,12 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-arrow-down"></i> Below
+                  </button>
+                  <button 
+                    onClick={() => copyCurrentRow(clickedRowIndex)} 
+                    className="btn btn-outline-primary btn-sm mx-1"
+                  >
+                    <i className="bi bi-files"></i> Copy Below
                   </button>
                   <button 
                     onClick={() => {
