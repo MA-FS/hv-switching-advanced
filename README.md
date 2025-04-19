@@ -1,6 +1,6 @@
 # High Voltage Switching Program Creator
 
-<img src="switching-program/public/logo.jpg" alt="HV Switching Program Creator Logo" width="200"/>
+<img src="switching-program/public/logo.PNG" alt="HV Switching Program Creator Logo" width="200"/>
 
 ## Overview
 

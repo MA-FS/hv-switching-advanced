@@ -627,7 +627,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
       const logoSize = 20;
 
       // Load logo
-      const logoUrl = process.env.PUBLIC_URL + '/logo.jpg';
+      const logoUrl = process.env.PUBLIC_URL + '/logo.PNG';
       
       // Load image asynchronously
       let img;
