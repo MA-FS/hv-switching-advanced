@@ -12,6 +12,7 @@ import ReadmeSplash from './components/ReadmeSplash';
 import ConfirmationModal from './components/ConfirmationModal';
 import InputModal from './components/InputModal';
 import FloatingButtons from './components/FloatingButtons';
+import WelcomeModal from './components/WelcomeModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './styles.css';
@@ -43,6 +44,7 @@ const App = () => {
   const [saveConfirmation, setSaveConfirmation] = useState(false);
   const [showReadme, setShowReadme] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [confirmationModal, setConfirmationModal] = useState({
     show: false,
     title: '',
@@ -53,6 +55,7 @@ const App = () => {
     show: false,
     title: '',
     defaultValue: '',
+    placeholder: '',
     onConfirm: null
   });
   const [exportPDFFunction, setExportPDFFunction] = useState(null);
@@ -66,7 +69,11 @@ const App = () => {
     });
 
     localforage.getItem('programs').then(savedPrograms => {
-      if (savedPrograms) setPrograms(savedPrograms);
+      if (savedPrograms) {
+        setPrograms(savedPrograms);
+      } else {
+        setShowWelcomeModal(true);
+      }
     });
   }, []);
 
@@ -91,6 +98,7 @@ const App = () => {
         show: true,
         title: 'Save Program',
         defaultValue: '',
+        placeholder: 'Enter program name',
         onConfirm: (programName) => {
           if (programName.trim() === '') {
             setConfirmationModal({
@@ -247,12 +255,33 @@ const App = () => {
   };
 
   const handleNewProgram = () => {
-    setConfirmationModal({
+    const hasContent = 
+      tableData.length > 0 || 
+      Object.values(formData).some(value => value.trim() !== '');
+      
+    if (hasContent) {
+      setConfirmationModal({
+        show: true,
+        title: 'New Program',
+        message: 'Are you sure you want to create a new program? All unsaved changes will be lost.',
+        onConfirm: () => {
+          promptForNewProgram();
+          setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+        }
+      });
+    } else {
+      promptForNewProgram();
+    }
+  };
+  
+  const promptForNewProgram = () => {
+    setInputModal({
       show: true,
-      title: 'New Program',
-      message: 'Are you sure you want to create a new program? All unsaved changes will be lost.',
-      onConfirm: () => {
-        setCurrentProgram('');
+      title: 'Create New Program',
+      defaultValue: '',
+      placeholder: 'Enter program name (optional)',
+      onConfirm: (programName) => {
+        setCurrentProgram(programName || '');
         setFormData({
           name: '',
           programNo: '',
@@ -274,7 +303,10 @@ const App = () => {
         });
         setTableData([]);
         setCurrentProgramName('');
-        setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+        setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
+      },
+      onCancel: () => {
+        setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
       }
     });
   };
@@ -373,10 +405,16 @@ const App = () => {
       <div className="container-fluid my-4">
         <div className="header-container">
           <div className="left-content">
-            <h4 className="mr-3">Current Program: {currentProgram}</h4>
-            <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
-              Save Current Program
-            </button>
+            {currentProgram ? (
+              <>
+                <h4 className="mr-3">Current Program: {currentProgram}</h4>
+                <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
+                  Save Current Program
+                </button>
+              </>
+            ) : (
+              <h4 className="mr-3">New Unsaved Program</h4>
+            )}
             <span className={`auto-save-status ${autoSaveStatus}`}>
               {autoSaveStatus === 'saving' ? 'Saving...' : 'All changes saved'}
             </span>
@@ -398,33 +436,46 @@ const App = () => {
             onError={handlePDFError}
           />
           <div className="d-flex justify-content-between mt-3">
-            <input
-              type="text"
-              className="form-control mr-2"
-              placeholder="Enter program name"
-              value={currentProgramName}
-              onChange={(e) => setCurrentProgramName(e.target.value)}
-            />
-            <button className="btn btn-success mr-2" onClick={handleSaveProgram}>
-              <i className="bi bi-save mr-3"></i> Save Program
-            </button>
-            <button 
-              className="btn btn-primary mr-2" 
-              onClick={() => exportPDFFunction && exportPDFFunction()} 
-              title="Export the current program to a PDF document"
-              disabled={!exportPDFFunction}
-            >
-              <i className="bi bi-file-earmark-pdf mr-3"></i> Export to PDF
-            </button>
-            <button className="btn btn-warning" onClick={handleNewProgram}>
-              <i className="bi bi-file-earmark-plus mr-3"></i> New Program
-            </button>
+            <div className="d-flex flex-grow-1 mr-2">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Enter program name"
+                value={currentProgramName}
+                onChange={(e) => setCurrentProgramName(e.target.value)}
+              />
+              <button className="btn btn-success ml-2" onClick={handleSaveProgram}>
+                <i className="bi bi-save"></i> Save As
+              </button>
+            </div>
+            <div>
+              <button 
+                className="btn btn-primary mr-2" 
+                onClick={() => exportPDFFunction && exportPDFFunction()} 
+                title="Export the current program to a PDF document"
+                disabled={!exportPDFFunction}
+              >
+                <i className="bi bi-file-earmark-pdf"></i> Export PDF
+              </button>
+              <button className="btn btn-warning" onClick={handleNewProgram}>
+                <i className="bi bi-file-earmark-plus"></i> New Program
+              </button>
+            </div>
           </div>
+          
           <div className="mt-4">
             <h2 className="text-primary mb-4">Saved Programs</h2>
             <div className="saved-programs-grid">
               {Object.keys(programs).length === 0 ? (
-                <div className="no-programs">No saved programs yet. Create one to get started!</div>
+                <div className="no-programs">
+                  <p>No saved programs yet.</p>
+                  <button 
+                    className="btn btn-primary mt-3" 
+                    onClick={handleNewProgram}
+                  >
+                    <i className="bi bi-file-earmark-plus"></i> Create Your First Program
+                  </button>
+                </div>
               ) : (
                 Object.keys(programs).map(programName => (
                   <div className="program-card-modern" key={programName}>
@@ -481,8 +532,17 @@ const App = () => {
         show={inputModal.show}
         title={inputModal.title}
         defaultValue={inputModal.defaultValue}
+        placeholder={inputModal.placeholder}
         onConfirm={inputModal.onConfirm}
         onCancel={() => setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null })}
+      />
+      <WelcomeModal 
+        show={showWelcomeModal} 
+        onNewProgram={() => {
+          setShowWelcomeModal(false);
+          promptForNewProgram();
+        }}
+        onClose={() => setShowWelcomeModal(false)}
       />
       <FloatingButtons 
         currentProgram={currentProgram}

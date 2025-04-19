@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles.css';
 
-const InputModal = ({ show, title, defaultValue, onConfirm, onCancel }) => {
+const InputModal = ({ show, title, defaultValue, placeholder, onConfirm, onCancel }) => {
   const [inputValue, setInputValue] = useState(defaultValue || '');
   const contentRef = useRef(null);
 
@@ -60,6 +60,7 @@ const InputModal = ({ show, title, defaultValue, onConfirm, onCancel }) => {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          placeholder={placeholder || "Enter value"}
           autoFocus
         />
         <div className="modal-actions">
@@ -69,7 +70,7 @@ const InputModal = ({ show, title, defaultValue, onConfirm, onCancel }) => {
           <button 
             className="btn btn-primary" 
             onClick={handleConfirm}
-            disabled={!inputValue.trim()}
+            disabled={title.includes('Save') && !inputValue.trim()}
           >
             Confirm
           </button>
