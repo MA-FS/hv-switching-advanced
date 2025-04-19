@@ -448,13 +448,26 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // Calculate popup dimensions (approximate)
-    const popupWidth = 150; // min-width of popup
-    const popupHeight = 150; // approximate height
+    // Determine if we should use horizontal or vertical layout
+    // If window is too narrow, use vertical layout
+    const useVerticalLayout = windowWidth < 550;
     
-    // Adjust position to ensure popup is fully visible
+    // Calculate popup dimensions (approximate)
+    const popupWidth = useVerticalLayout ? 180 : 380; // wider for horizontal layout
+    const popupHeight = useVerticalLayout ? 220 : 120; // shorter for horizontal layout
+    
+    // Determine the best position strategy
+    let positionStrategy = 'top'; // default: show above click point
+    
+    // Check if popup would go off the top edge
+    if (y - popupHeight < 0) {
+      positionStrategy = 'bottom'; // show below click point
+    }
+    
+    // Set initial position values
     let adjustedX = x;
     let adjustedY = y;
+    let transform = 'translate(-50%, -100%)'; // default transform for top position
     
     // Check if popup would go off the right edge
     if (x + popupWidth / 2 > windowWidth) {
@@ -466,14 +479,17 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
       adjustedX = popupWidth / 2 + 10;
     }
     
-    // Check if popup would go off the top edge
-    if (y - popupHeight < 0) {
-      adjustedY = popupHeight + 10;
+    // Apply position strategy
+    if (positionStrategy === 'bottom') {
+      transform = 'translate(-50%, 10px)';
     }
     
     setInsertPopupPosition({
       x: adjustedX,
-      y: adjustedY
+      y: adjustedY,
+      transform: transform,
+      strategy: positionStrategy,
+      useVerticalLayout: useVerticalLayout
     });
     
     setClickedRowIndex(index);
@@ -504,6 +520,23 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     
     const newRow = Array(columns.length).fill('');
     const newRows = [...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)];
+    setRows(newRows);
+    setTableData(newRows);
+    setClickedRowIndex(null);
+    setShowInsertPopup(false);
+    addToHistory(newRows);
+  };
+
+  // New function to copy current row
+  const copyCurrentRow = (index) => {
+    // Don't allow copying if the target row is part of a reverse block
+    if (rows[index]?.isReverseBlock) {
+      return;
+    }
+    
+    // Copy the current row's data
+    const currentRow = [...rows[index]];
+    const newRows = [...rows.slice(0, index + 1), currentRow, ...rows.slice(index + 1)];
     setRows(newRows);
     setTableData(newRows);
     setClickedRowIndex(null);
@@ -905,6 +938,19 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     }
   };
 
+  // Add useEffect to update popup position on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      // If popup is shown, hide it on resize to prevent positioning issues
+      if (showInsertPopup) {
+        setShowInsertPopup(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [showInsertPopup]);
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div 
@@ -1293,17 +1339,20 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           {showInsertPopup && clickedRowIndex !== null && (
             <div
               ref={popupRef}
-              className="insert-options d-flex flex-column align-items-stretch"
+              className={`insert-options ${insertPopupPosition.useVerticalLayout ? 'd-flex flex-column' : 'd-flex flex-row'} align-items-center`}
               style={{
                 position: 'fixed',
                 top: `${insertPopupPosition.y}px`,
                 left: `${insertPopupPosition.x}px`,
-                transform: 'translate(-50%, -100%)',
+                transform: insertPopupPosition.transform || 'translate(-50%, -100%)',
                 padding: '10px',
                 zIndex: 1000,
-                marginTop: '-10px',
-                animation: 'fadeIn 0.2s ease-in-out',
-                minWidth: '140px'
+                marginTop: insertPopupPosition.strategy === 'bottom' ? '0' : '-10px',
+                animation: insertPopupPosition.strategy === 'bottom' ? 'fadeInBottom 0.2s ease-in-out' : 'fadeIn 0.2s ease-in-out',
+                minWidth: insertPopupPosition.useVerticalLayout ? '140px' : '360px',
+                backgroundColor: '#333333',
+                borderRadius: '6px',
+                border: '1px solid #222222'
               }}
             >
               <style>
@@ -1312,27 +1361,38 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                     from { opacity: 0; transform: translate(-50%, -90%); }
                     to { opacity: 1; transform: translate(-50%, -100%); }
                   }
+                  @keyframes fadeInBottom {
+                    from { opacity: 0; transform: translate(-50%, 0); }
+                    to { opacity: 1; transform: translate(-50%, 10px); }
+                  }
                 `}
               </style>
-              <div className="text-center mb-2">
+              <div className={`text-center ${insertPopupPosition.useVerticalLayout ? 'mb-2 w-100' : 'mr-3'}`}>
                 <span className="popup-title">Insert Row</span>
               </div>
               <button
-                className="btn btn-outline-primary btn-sm mb-1 d-flex align-items-center justify-content-center"
+                className={`btn btn-outline-primary btn-sm ${insertPopupPosition.useVerticalLayout ? 'mb-1 d-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
                 onClick={() => insertRowAbove(clickedRowIndex)}
                 title="Insert a new row above the selected row"
               >
                 <i className="bi bi-arrow-up-circle mr-2"></i> Above
               </button>
               <button
-                className="btn btn-outline-primary btn-sm mb-1 d-flex align-items-center justify-content-center"
+                className={`btn btn-outline-primary btn-sm ${insertPopupPosition.useVerticalLayout ? 'mb-1 d-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
                 onClick={() => insertRowBelow(clickedRowIndex)}
                 title="Insert a new row below the selected row"
               >
                 <i className="bi bi-arrow-down-circle mr-2"></i> Below
               </button>
               <button
-                className="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                className={`btn btn-outline-primary btn-sm ${insertPopupPosition.useVerticalLayout ? 'mb-1 d-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
+                onClick={() => copyCurrentRow(clickedRowIndex)}
+                title="Copy this row and insert below"
+              >
+                <i className="bi bi-files mr-2"></i> Copy Row
+              </button>
+              <button
+                className={`btn btn-outline-secondary btn-sm ${insertPopupPosition.useVerticalLayout ? 'd-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
                 onClick={() => {
                   setClickedRowIndex(null);
                   setShowInsertPopup(false);
@@ -1355,9 +1415,6 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
           </button>
           <button className="btn btn-success" onClick={addRow} title="Add a new empty row to the table">
             <i className="bi bi-plus-lg mr-1"></i> Add Row
-          </button>
-          <button className="btn btn-info" onClick={copyFromAbove} title="Add a new row with data copied from the row above">
-            <i className="bi bi-files mr-1"></i> Copy From Above
           </button>
           <button 
             className="btn btn-secondary"
