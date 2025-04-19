@@ -647,8 +647,10 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
           // Load logo
           const logoUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://ma-fs.github.io/hv-switching-advanced/logo.PNG' 
-            : process.env.PUBLIC_URL + '/logo.PNG';
+            ? 'https://ma-fs.github.io/hv-switching-advanced/logo.png' 
+            : process.env.PUBLIC_URL + '/logo.png';
+          
+          console.log('Loading logo from:', logoUrl);
           
           // Load image asynchronously
           let img;
@@ -656,10 +658,30 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             img = await new Promise((resolve, reject) => {
               const image = new Image();
               image.crossOrigin = "Anonymous";
-              image.onload = () => resolve(image);
+              image.onload = () => {
+                console.log('Logo loaded successfully, dimensions:', image.width, 'x', image.height);
+                resolve(image);
+              };
               image.onerror = (e) => {
                 console.error('Failed to load logo:', e, logoUrl);
-                resolve(null);
+                // Try one more time with a different URL if in production
+                if (process.env.NODE_ENV === 'production') {
+                  const fallbackUrl = `${window.location.origin}/hv-switching-advanced/logo.png`;
+                  console.log('Attempting fallback URL:', fallbackUrl);
+                  const fallbackImage = new Image();
+                  fallbackImage.crossOrigin = "Anonymous";
+                  fallbackImage.onload = () => {
+                    console.log('Logo loaded with fallback URL');
+                    resolve(fallbackImage);
+                  };
+                  fallbackImage.onerror = () => {
+                    console.error('Failed to load logo with fallback URL');
+                    resolve(null);
+                  };
+                  fallbackImage.src = fallbackUrl;
+                } else {
+                  resolve(null);
+                }
               };
               image.src = logoUrl;
             });
@@ -671,7 +693,10 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           // Also preload the dalewest logo (for footer)
           let dalewestImg;
           try {
-            const dalewestLogoUrl = process.env.PUBLIC_URL + '/dalewest.jpg';
+            const dalewestLogoUrl = process.env.NODE_ENV === 'production'
+              ? 'https://ma-fs.github.io/hv-switching-advanced/dalewest.jpg'
+              : process.env.PUBLIC_URL + '/dalewest.jpg';
+            
             console.log('Loading dalewest logo from:', dalewestLogoUrl);
             
             dalewestImg = await new Promise((resolve, reject) => {
@@ -683,7 +708,24 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               };
               image.onerror = (e) => {
                 console.error('Failed to load dalewest logo:', e);
-                resolve(null);
+                // Try a fallback URL
+                if (process.env.NODE_ENV === 'production') {
+                  const fallbackUrl = `${window.location.origin}/hv-switching-advanced/dalewest.jpg`;
+                  console.log('Attempting fallback URL for dalewest logo:', fallbackUrl);
+                  const fallbackImage = new Image();
+                  fallbackImage.crossOrigin = "Anonymous";
+                  fallbackImage.onload = () => {
+                    console.log('Dalewest logo loaded with fallback URL');
+                    resolve(fallbackImage);
+                  };
+                  fallbackImage.onerror = () => {
+                    console.error('Failed to load dalewest logo with fallback URL');
+                    resolve(null);
+                  };
+                  fallbackImage.src = fallbackUrl;
+                } else {
+                  resolve(null);
+                }
               };
               image.src = dalewestLogoUrl;
             });
@@ -697,10 +739,18 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             // Add logo if available
             if (img) {
               try {
-                doc.addImage(img, 'JPEG', margin, margin, logoSize, logoSize);
+                const imgFormat = logoUrl.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
+                doc.addImage(img, imgFormat, margin, margin, logoSize, logoSize);
+                console.log('Successfully added logo to PDF header');
               } catch (error) {
-                console.error('Error adding logo:', error);
+                console.error('Error adding logo to PDF:', error);
               }
+            } else {
+              console.warn('Logo not available for PDF header');
+              // Add text placeholder for logo
+              doc.setFontSize(10);
+              doc.setTextColor(100, 100, 100);
+              doc.text("HV Coach Logo", margin + 5, margin + 8);
             }
 
             // Add title
@@ -1068,10 +1118,22 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   // Add header with exact same spacing as first page
                   if (img) {
                     try {
-                      doc.addImage(img, 'JPEG', margin, margin, logoSize, logoSize);
+                      const imgFormat = logoUrl.toLowerCase().endsWith('.png') ? 'PNG' : 'JPEG';
+                      doc.addImage(img, imgFormat, margin, margin, logoSize, logoSize);
+                      console.log(`Successfully added logo to PDF header on page ${data.pageNumber}`);
                     } catch (error) {
-                      console.error('Error adding logo:', error);
+                      console.error(`Error adding logo to page ${data.pageNumber}:`, error);
+                      // Add text placeholder for logo
+                      doc.setFontSize(10);
+                      doc.setTextColor(100, 100, 100);
+                      doc.text("HV Coach Logo", margin + 5, margin + 8);
                     }
+                  } else {
+                    console.warn(`Logo not available for PDF header on page ${data.pageNumber}`);
+                    // Add text placeholder for logo
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text("HV Coach Logo", margin + 5, margin + 8);
                   }
 
                   // Add title with exact same spacing as first page
