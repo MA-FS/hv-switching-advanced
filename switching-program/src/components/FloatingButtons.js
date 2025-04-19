@@ -37,7 +37,7 @@ const FloatingButtons = ({
       <div className="floating-content">
         <h4 className="mr-3">Current Program: {currentProgram}</h4>
         <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
-          Save Current Program
+          <i className="bi bi-save"></i> Save Current Program
         </button>
         {autoSaveStatus && (
           <span className="auto-save-status">{autoSaveStatus}</span>

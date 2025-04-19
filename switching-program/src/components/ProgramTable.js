@@ -224,7 +224,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
   );
 };
 
-const ProgramTable = ({ tableData, setTableData, formData }) => {
+const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
   const [rows, setRows] = useState(tableData);  
   const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -938,6 +938,13 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
     }
   };
 
+  // Call the passed exportToPDF prop function if it exists
+  useEffect(() => {
+    if (onExportPDF) {
+      onExportPDF(exportToPDF);
+    }
+  }, [onExportPDF]);
+
   // Add useEffect to update popup position on window resize
   useEffect(() => {
     const handleResize = () => {
@@ -1423,9 +1430,6 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
             title="Add a reverse section to the program (can only be added once)"
           >
             <i className="bi bi-arrow-left-right mr-1"></i> Reverse
-          </button>
-          <button className="btn btn-primary" onClick={exportToPDF} title="Export the current program to a PDF document">
-            <i className="bi bi-file-earmark-pdf mr-1"></i> Export to PDF
           </button>
         </div>
       </div>

@@ -638,8 +638,11 @@ footer {
 }
 
 .floating-content button {
-  padding: 8px 15px;
+  padding: 8px 20px;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes slideDown {
@@ -745,9 +748,12 @@ input[type="text"].form-control:focus {
 }
 
 .d-flex.justify-content-between .btn {
-  padding: 10px 20px;
+  padding: 10px 24px;
   font-weight: 600;
-  min-width: 140px;
+  min-width: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Saved Programs heading */
@@ -851,7 +857,7 @@ h2.text-primary {
 }
 
 .btn i {
-  margin-right: 6px;
+  margin-right: 10px;
 }
 
 /* Readme Splash Modal Styles */

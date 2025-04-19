@@ -12,6 +12,7 @@ import ReadmeSplash from './components/ReadmeSplash';
 import ConfirmationModal from './components/ConfirmationModal';
 import FloatingButtons from './components/FloatingButtons';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './styles.css';
 
 const App = () => {
@@ -47,6 +48,7 @@ const App = () => {
     message: '',
     onConfirm: null
   });
+  const [exportPDFFunction, setExportPDFFunction] = useState(null);
 
   useEffect(() => {
     localforage.getItem('hasVisited').then(hasVisited => {
@@ -258,6 +260,11 @@ const App = () => {
     setShowReadme(!showReadme);
   };
 
+  // Function to set the exportPDF function from the ProgramTable component
+  const setExportPDF = useCallback((exportFn) => {
+    setExportPDFFunction(() => exportFn);
+  }, []);
+
   // Debounced auto-save function
   const debouncedAutoSave = useCallback(
     debounce((formData, tableData, programName) => {
@@ -309,7 +316,7 @@ const App = () => {
         <div className="container">
           <InfoForm formData={formData} handleChange={handleChange} />
           <hr className="separator" />
-          <ProgramTable tableData={tableData} setTableData={handleTableDataChange} formData={formData} />
+          <ProgramTable tableData={tableData} setTableData={handleTableDataChange} formData={formData} onExportPDF={setExportPDF} />
           <div className="d-flex justify-content-between mt-3">
             <input
               type="text"
@@ -319,10 +326,18 @@ const App = () => {
               onChange={(e) => setCurrentProgramName(e.target.value)}
             />
             <button className="btn btn-success mr-2" onClick={handleSaveProgram}>
-              Save Program
+              <i className="bi bi-save mr-3"></i> Save Program
+            </button>
+            <button 
+              className="btn btn-primary mr-2" 
+              onClick={() => exportPDFFunction && exportPDFFunction()} 
+              title="Export the current program to a PDF document"
+              disabled={!exportPDFFunction}
+            >
+              <i className="bi bi-file-earmark-pdf mr-3"></i> Export to PDF
             </button>
             <button className="btn btn-warning" onClick={handleNewProgram}>
-              New Program
+              <i className="bi bi-file-earmark-plus mr-3"></i> New Program
             </button>
           </div>
           <div className="mt-4">
