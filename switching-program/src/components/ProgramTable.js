@@ -11,6 +11,7 @@ const ItemType = 'ROW';
 
 const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, deleteRow, itemNumber, isReverseSection, columnWidths, onClick, onInsertClick, isScrolling, deleteReverseSection, rowInReverseBlock }) => {
   const ref = useRef(null);
+  const dragHandleRef = useRef(null); // New ref for the drag handle
   const originalIndex = index; // Store original index
 
   // *** useDrop modifications ***
@@ -96,7 +97,9 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     canDrag: () => !isReverseSection,
   });
 
-  drag(drop(ref));
+  // Only apply drag to the handle, and drop to the whole row
+  drop(ref);
+  drag(dragHandleRef);
 
   const isReverseRow = row[5] === 'REVERSE';
   const showDeleteButton = isReverseSection && isReverseRow && rowInReverseBlock === 1;
@@ -147,15 +150,25 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     <tr
       ref={ref}
       className={rowClasses}
-      style={{
-        // opacity: isDragging ? 0.5 : 1, // Remove opacity change
-        cursor: isReverseSection ? 'default' : 'move',
-      }}
       onClick={handleRowClick}
-      title={isReverseSection ? "Reverse section (not draggable)" : "Click to select, drag to reorder"}
+      title={isReverseSection ? "Reverse section (not draggable)" : "Click to select"}
       data-handler-id={handlerId} // Add handlerId for react-dnd backend internals
     >
-      <td className="item-column">{isReverseSection ? '' : itemNumber}</td>
+      <td className="item-column">
+        {!isReverseSection && (
+          <div className="step-container">
+            <div 
+              ref={dragHandleRef} 
+              className="drag-handle"
+              title="Drag to reorder"
+            >
+              <i className="bi bi-grip-vertical"></i>
+            </div>
+            <span className="step-number">{itemNumber}</span>
+          </div>
+        )}
+        {isReverseSection && ''}
+      </td>
       {row.map((col, colIndex) => (
         <td key={colIndex} style={{ width: columnWidths[colIndex] + 'px' }}>
           <input
@@ -954,8 +967,20 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
         <style>
           {`
             .item-column {
-              width: 50px;
+              width: 60px;
               text-align: center;
+              padding: 0 !important;
+            }
+            .step-container {
+              display: flex;
+              align-items: center;
+              height: 100%;
+              width: 100%;
+            }
+            .step-number {
+              flex: 1;
+              font-weight: 500;
+              padding-right: 8px;
             }
             .actions-cell {
               width: 60px !important;
@@ -1152,6 +1177,28 @@ const ProgramTable = ({ tableData, setTableData, formData }) => {
                  border-bottom-color: #222222 !important;
             }
              /* --- End Drag and Drop Styles --- */
+             
+            /* Drag handle styles */
+            .drag-handle {
+              cursor: move;
+              color: #C27E5F;
+              opacity: 0.8;
+              transition: all 0.2s;
+              border-radius: 3px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              width: 24px;
+            }
+            .drag-handle:hover {
+              opacity: 1;
+              background-color: rgba(194, 126, 95, 0.2);
+            }
+            .drag-handle .bi {
+              font-size: 1.4rem;
+              display: block;
+            }
           `}
         </style>
         <div className="header-section">
