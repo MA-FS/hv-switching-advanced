@@ -224,7 +224,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
   );
 };
 
-const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
+const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError }) => {
   const [rows, setRows] = useState(tableData);  
   const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -1131,13 +1131,15 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
           if (error.stack) {
             console.error('Error stack:', error.stack);
           }
-          alert('There was an error generating the PDF. Please check the browser console for details and try again.');
+          if (onError) {
+            onError('There was an error generating the PDF. Please check the browser console for details and try again.');
+          }
         }
       };
       
       onExportPDF(exportToPDFFunction);
     }
-  }, [onExportPDF, rows, formData, columns]); // Include all dependencies
+  }, [onExportPDF, rows, formData, columns, onError]); // Include all dependencies
 
   // Add useEffect to update popup position on window resize
   useEffect(() => {
@@ -1546,14 +1548,11 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
                 top: `${insertPopupPosition.y}px`,
                 left: `${insertPopupPosition.x}px`,
                 transform: insertPopupPosition.transform || 'translate(-50%, -100%)',
-                padding: '10px',
+                padding: '15px',
                 zIndex: 1000,
                 marginTop: insertPopupPosition.strategy === 'bottom' ? '0' : '-10px',
                 animation: insertPopupPosition.strategy === 'bottom' ? 'fadeInBottom 0.2s ease-in-out' : 'fadeIn 0.2s ease-in-out',
                 minWidth: insertPopupPosition.useVerticalLayout ? '140px' : '360px',
-                backgroundColor: '#333333',
-                borderRadius: '6px',
-                border: '1px solid #222222'
               }}
             >
               <style>
@@ -1568,40 +1567,57 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
                   }
                 `}
               </style>
-              <div className={`text-center ${insertPopupPosition.useVerticalLayout ? 'mb-2 w-100' : 'mr-3'}`}>
-                <span className="popup-title">Insert Row</span>
-              </div>
-              <button
-                className={`btn btn-outline-primary btn-sm ${insertPopupPosition.useVerticalLayout ? 'mb-1 d-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
-                onClick={() => insertRowAbove(clickedRowIndex)}
-                title="Insert a new row above the selected row"
-              >
-                <i className="bi bi-arrow-up-circle mr-2"></i> Above
-              </button>
-              <button
-                className={`btn btn-outline-primary btn-sm ${insertPopupPosition.useVerticalLayout ? 'mb-1 d-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
-                onClick={() => insertRowBelow(clickedRowIndex)}
-                title="Insert a new row below the selected row"
-              >
-                <i className="bi bi-arrow-down-circle mr-2"></i> Below
-              </button>
-              <button
-                className={`btn btn-outline-primary btn-sm ${insertPopupPosition.useVerticalLayout ? 'mb-1 d-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
-                onClick={() => copyCurrentRow(clickedRowIndex)}
-                title="Copy this row and insert below"
-              >
-                <i className="bi bi-files mr-2"></i> Copy Row
-              </button>
-              <button
-                className={`btn btn-outline-secondary btn-sm ${insertPopupPosition.useVerticalLayout ? 'd-flex w-100' : 'mx-1'} align-items-center justify-content-center`}
-                onClick={() => {
-                  setClickedRowIndex(null);
-                  setShowInsertPopup(false);
-                }}
-                title="Cancel row insertion"
-              >
-                <i className="bi bi-x-circle mr-2"></i> Cancel
-              </button>
+              {insertPopupPosition.useVerticalLayout ? (
+                <>
+                  <span className="popup-title">Insert</span>
+                  <button 
+                    onClick={() => insertRowAbove(clickedRowIndex)} 
+                    className="btn btn-outline-primary btn-sm my-1"
+                  >
+                    <i className="bi bi-arrow-up"></i> Above
+                  </button>
+                  <button 
+                    onClick={() => insertRowBelow(clickedRowIndex)} 
+                    className="btn btn-outline-primary btn-sm my-1"
+                  >
+                    <i className="bi bi-arrow-down"></i> Below
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setClickedRowIndex(null);
+                      setShowInsertPopup(false);
+                    }}
+                    className="btn btn-outline-secondary btn-sm mt-2"
+                  >
+                    <i className="bi bi-x"></i> Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="popup-title mr-2">Insert Row:</span>
+                  <button 
+                    onClick={() => insertRowAbove(clickedRowIndex)} 
+                    className="btn btn-outline-primary btn-sm mx-1"
+                  >
+                    <i className="bi bi-arrow-up"></i> Above
+                  </button>
+                  <button 
+                    onClick={() => insertRowBelow(clickedRowIndex)} 
+                    className="btn btn-outline-primary btn-sm mx-1"
+                  >
+                    <i className="bi bi-arrow-down"></i> Below
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setClickedRowIndex(null);
+                      setShowInsertPopup(false);
+                    }}
+                    className="btn btn-outline-secondary btn-sm ml-2"
+                  >
+                    <i className="bi bi-x"></i> Cancel
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

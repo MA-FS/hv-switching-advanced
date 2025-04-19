@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../styles.css';
 
-const ConfirmationModal = ({ show, title, message, onConfirm, onCancel }) => {
+const InputModal = ({ show, title, defaultValue, onConfirm, onCancel }) => {
+  const [inputValue, setInputValue] = useState(defaultValue || '');
   const contentRef = useRef(null);
 
   useEffect(() => {
@@ -20,7 +21,22 @@ const ConfirmationModal = ({ show, title, message, onConfirm, onCancel }) => {
     };
   }, [show, onCancel]);
 
+  useEffect(() => {
+    setInputValue(defaultValue || '');
+  }, [defaultValue]);
+
   if (!show) return null;
+
+  const handleConfirm = () => {
+    onConfirm(inputValue);
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleConfirm();
+    }
+  };
 
   // Add inline styles to ensure proper contrast
   const modalContentStyle = {
@@ -35,21 +51,26 @@ const ConfirmationModal = ({ show, title, message, onConfirm, onCancel }) => {
     paddingBottom: '0.5rem'
   };
 
-  const modalMessageStyle = {
-    color: 'var(--off-white)',
-    fontSize: '1.1rem'
-  };
-
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={modalContentStyle} ref={contentRef}>
+      <div className="input-modal-content" style={modalContentStyle} ref={contentRef}>
         <h3 className="modal-title" style={modalTitleStyle}>{title}</h3>
-        <p className="modal-message" style={modalMessageStyle}>{message}</p>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          autoFocus
+        />
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onCancel}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={onConfirm}>
+          <button 
+            className="btn btn-primary" 
+            onClick={handleConfirm}
+            disabled={!inputValue.trim()}
+          >
             Confirm
           </button>
         </div>
@@ -58,4 +79,4 @@ const ConfirmationModal = ({ show, title, message, onConfirm, onCancel }) => {
   );
 };
 
-export default ConfirmationModal; 
+export default InputModal; 

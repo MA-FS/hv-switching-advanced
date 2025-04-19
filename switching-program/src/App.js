@@ -10,6 +10,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import SaveConfirmation from './components/SaveConfirmation';
 import ReadmeSplash from './components/ReadmeSplash';
 import ConfirmationModal from './components/ConfirmationModal';
+import InputModal from './components/InputModal';
 import FloatingButtons from './components/FloatingButtons';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -48,6 +49,12 @@ const App = () => {
     message: '',
     onConfirm: null
   });
+  const [inputModal, setInputModal] = useState({
+    show: false,
+    title: '',
+    defaultValue: '',
+    onConfirm: null
+  });
   const [exportPDFFunction, setExportPDFFunction] = useState(null);
 
   useEffect(() => {
@@ -80,18 +87,59 @@ const App = () => {
 
   const handleSaveProgram = () => {
     if (currentProgramName.trim() === '') {
-      alert('Please enter a name for the program.');
+      setInputModal({
+        show: true,
+        title: 'Save Program',
+        defaultValue: '',
+        onConfirm: (programName) => {
+          if (programName.trim() === '') {
+            setConfirmationModal({
+              show: true,
+              title: 'Error',
+              message: 'Program name cannot be empty.',
+              onConfirm: () => {
+                setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+                handleSaveProgram();
+              }
+            });
+          } else {
+            if (programs[programName] && programName !== currentProgram) {
+              setConfirmationModal({
+                show: true,
+                title: 'Overwrite Program',
+                message: 'A program with this name already exists. Do you want to overwrite it?',
+                onConfirm: () => {
+                  setPrograms({ ...programs, [programName]: { formData, tableData } });
+                  setCurrentProgram(programName);
+                  setCurrentProgramName('');
+                  setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+                  setSaveConfirmation(true);
+                }
+              });
+            } else {
+              setPrograms({ ...programs, [programName]: { formData, tableData } });
+              setCurrentProgram(programName);
+              setCurrentProgramName('');
+              setSaveConfirmation(true);
+            }
+          }
+          
+          setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
+        },
+        onCancel: () => {
+          setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
+        }
+      });
       return;
     }
     
-    // If the program name is the same as the current program, just update it
     if (currentProgramName === currentProgram) {
       setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
       setCurrentProgramName('');
+      setSaveConfirmation(true);
       return;
     }
     
-    // If a program with this name already exists and it's not the current program
     if (programs[currentProgramName] && currentProgramName !== currentProgram) {
       setConfirmationModal({
         show: true,
@@ -102,20 +150,28 @@ const App = () => {
           setCurrentProgram(currentProgramName);
           setCurrentProgramName('');
           setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+          setSaveConfirmation(true);
         }
       });
       return;
     }
     
-    // Create a new program
     setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
     setCurrentProgram(currentProgramName);
     setCurrentProgramName('');
+    setSaveConfirmation(true);
   };
 
   const handleUpdateCurrentProgram = () => {
     if (currentProgram.trim() === '') {
-      alert('No program is currently loaded.');
+      setConfirmationModal({
+        show: true,
+        title: 'Error',
+        message: 'No program is currently loaded.',
+        onConfirm: () => {
+          setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+        }
+      });
       return;
     }
     
@@ -144,7 +200,6 @@ const App = () => {
         setTableData(program.tableData);
         setCurrentProgram(programName);
         
-        // Force an immediate autosave after loading a program
         setTimeout(() => {
           debouncedAutoSave(program.formData, program.tableData, programName);
         }, 100);
@@ -225,47 +280,56 @@ const App = () => {
   };
 
   const handleRenameProgram = (oldName) => {
-    const newName = prompt('Enter the new name for the program:', oldName);
-    if (newName && newName !== oldName) {
-      if (programs[newName]) {
-        alert('A program with this name already exists.');
-        return;
-      }
-      
-      // Create new programs object with renamed program
-      const newPrograms = { ...programs };
-      newPrograms[newName] = newPrograms[oldName];
-      delete newPrograms[oldName];
-      
-      // Update state
-      setPrograms(newPrograms);
-      
-      // Update current program if needed
-      if (currentProgram === oldName) {
-        setCurrentProgram(newName);
-        // Also update currentProgramName to match the new name
-        setCurrentProgramName(newName);
+    setInputModal({
+      show: true,
+      title: 'Rename Program',
+      defaultValue: oldName,
+      onConfirm: (newName) => {
+        if (newName && newName !== oldName) {
+          if (programs[newName]) {
+            setConfirmationModal({
+              show: true,
+              title: 'Error',
+              message: 'A program with this name already exists.',
+              onConfirm: () => {
+                setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+                handleRenameProgram(oldName);
+              }
+            });
+            setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
+            return;
+          }
+          
+          const newPrograms = { ...programs };
+          newPrograms[newName] = newPrograms[oldName];
+          delete newPrograms[oldName];
+          
+          setPrograms(newPrograms);
+          
+          if (currentProgram === oldName) {
+            setCurrentProgram(newName);
+            setCurrentProgramName(newName);
+            
+            debouncedAutoSave(formData, tableData, newName);
+          }
+          
+          localforage.setItem('programs', newPrograms);
+          localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
+        }
         
-        // Force an immediate save of the renamed program
-        debouncedAutoSave(formData, tableData, newName);
+        setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
       }
-      
-      // Ensure both storage mechanisms are updated
-      localforage.setItem('programs', newPrograms);
-      localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
-    }
+    });
   };
 
   const handleToggleReadme = () => {
     setShowReadme(!showReadme);
   };
 
-  // Function to set the exportPDF function from the ProgramTable component
   const setExportPDF = useCallback((exportFn) => {
     setExportPDFFunction(() => exportFn);
   }, []);
 
-  // Debounced auto-save function
   const debouncedAutoSave = useCallback(
     debounce((formData, tableData, programName) => {
       if (programName && formData && tableData) {
@@ -286,12 +350,22 @@ const App = () => {
     [programs]
   );
 
-  // Effect to trigger auto-save when form data or table data changes
   useEffect(() => {
     if (currentProgram && formData && tableData) {
       debouncedAutoSave(formData, tableData, currentProgram);
     }
   }, [formData, tableData, currentProgram, debouncedAutoSave]);
+
+  const handlePDFError = (errorMessage) => {
+    setConfirmationModal({
+      show: true,
+      title: 'PDF Generation Error',
+      message: errorMessage,
+      onConfirm: () => {
+        setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+      }
+    });
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -316,7 +390,13 @@ const App = () => {
         <div className="container">
           <InfoForm formData={formData} handleChange={handleChange} />
           <hr className="separator" />
-          <ProgramTable tableData={tableData} setTableData={handleTableDataChange} formData={formData} onExportPDF={setExportPDF} />
+          <ProgramTable 
+            tableData={tableData} 
+            setTableData={handleTableDataChange} 
+            formData={formData} 
+            onExportPDF={setExportPDF} 
+            onError={handlePDFError}
+          />
           <div className="d-flex justify-content-between mt-3">
             <input
               type="text"
@@ -396,6 +476,13 @@ const App = () => {
         message={confirmationModal.message}
         onConfirm={confirmationModal.onConfirm}
         onCancel={() => setConfirmationModal({ show: false, title: '', message: '', onConfirm: null })}
+      />
+      <InputModal
+        show={inputModal.show}
+        title={inputModal.title}
+        defaultValue={inputModal.defaultValue}
+        onConfirm={inputModal.onConfirm}
+        onCancel={() => setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null })}
       />
       <FloatingButtons 
         currentProgram={currentProgram}

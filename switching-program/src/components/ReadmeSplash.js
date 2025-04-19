@@ -1,28 +1,28 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import '../styles.css';
 
-// Custom styles for ReadmeSplash
+// Custom styles for ReadmeSplash consistent with the app theme
 const customStyles = {
   readmeContent: {
-    backgroundColor: '#333333',
+    backgroundColor: 'var(--bg-dark)',
     padding: '2rem',
     borderRadius: '10px',
     maxWidth: '80%',
     maxHeight: '90%',
     overflowY: 'auto',
-    color: '#F7F7F7',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
-    border: '1px solid #222222',
+    color: 'var(--off-white)',
+    boxShadow: 'var(--shadow-lg)',
+    border: '1px solid var(--copper-primary)',
     fontSize: '1.25rem',
   },
   header: {
-    backgroundColor: '#222222',
+    backgroundColor: 'var(--charcoal-dark)',
     padding: '1rem',
     borderRadius: '8px 8px 0 0',
     marginBottom: '1.5rem',
     display: 'flex',
     alignItems: 'center',
-    borderBottom: '4px solid #B06745'
+    borderBottom: '4px solid var(--copper-primary)'
   },
   logo: {
     height: '50px',
@@ -30,28 +30,28 @@ const customStyles = {
     boxShadow: '3px 3px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(0, 0, 0, 0.4)'
   },
   heading: {
-    color: '#F7F7F7',
+    color: 'var(--off-white)',
     margin: '0',
     fontSize: '2.2rem',
     textTransform: 'uppercase',
     letterSpacing: '1px'
   },
   section: {
-    backgroundColor: '#444444',
+    backgroundColor: 'var(--bg-medium)',
     padding: '1.5rem',
     borderRadius: '8px',
     marginBottom: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+    boxShadow: 'var(--shadow-sm)'
   },
   sectionTitle: {
-    color: '#C27E5F',
-    borderBottom: '2px solid #222222',
+    color: 'var(--copper-light)',
+    borderBottom: '2px solid var(--charcoal-dark)',
     paddingBottom: '0.5rem',
     marginBottom: '1rem',
     fontSize: '1.8rem'
   },
   subSectionTitle: {
-    color: '#F7F7F7',
+    color: 'var(--off-white)',
     fontSize: '1.5rem',
     marginTop: '1.2rem',
     marginBottom: '0.8rem',
@@ -60,7 +60,7 @@ const customStyles = {
   list: {
     marginLeft: '1.5rem',
     marginBottom: '1rem',
-    color: '#E0E0E0',
+    color: 'var(--off-white)',
     fontSize: '1.25rem'
   },
   listItem: {
@@ -68,14 +68,14 @@ const customStyles = {
     lineHeight: '1.6'
   },
   copperText: {
-    color: '#C27E5F',
+    color: 'var(--copper-light)',
     fontWeight: '600',
     marginBottom: '0.8rem',
     fontSize: '1.4rem'
   },
   button: {
-    backgroundColor: '#B06745',
-    color: '#FFFFFF',
+    backgroundColor: 'var(--copper-primary)',
+    color: 'var(--off-white)',
     border: 'none',
     padding: '10px 20px',
     borderRadius: '4px',
@@ -88,18 +88,36 @@ const customStyles = {
     marginRight: 'auto'
   },
   buttonHover: {
-    backgroundColor: '#8A4D2E',
+    backgroundColor: 'var(--copper-dark)',
     transform: 'translateY(-3px)',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.25)'
+    boxShadow: 'var(--shadow-md)'
   }
 };
 
 const ReadmeSplash = ({ show, onClose }) => {
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (contentRef.current && !contentRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    if (show) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [show, onClose]);
+
   if (!show) return null;
 
   return (
     <div className="readme-splash">
-      <div style={customStyles.readmeContent}>
+      <div ref={contentRef} style={customStyles.readmeContent}>
         <div style={customStyles.header}>
           <h1 style={customStyles.heading}>HV Coach Switching Program</h1>
         </div>
@@ -147,16 +165,9 @@ const ReadmeSplash = ({ show, onClose }) => {
         </div>
         
         <button 
-          style={customStyles.button} 
+          className="btn btn-primary"
           onClick={onClose}
-          onMouseOver={(e) => {
-            Object.assign(e.target.style, customStyles.buttonHover);
-          }}
-          onMouseOut={(e) => {
-            e.target.style.backgroundColor = customStyles.button.backgroundColor;
-            e.target.style.transform = 'none';
-            e.target.style.boxShadow = 'none';
-          }}
+          style={{ display: 'block', margin: '0 auto', marginTop: '1.5rem' }}
         >
           Close & Start Using
         </button>
