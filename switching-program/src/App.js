@@ -337,21 +337,59 @@ const App = () => {
             return;
           }
           
+          // Copy the program data with the new name first
           const newPrograms = { ...programs };
-          newPrograms[newName] = newPrograms[oldName];
-          delete newPrograms[oldName];
+          newPrograms[newName] = { ...newPrograms[oldName] };
           
-          setPrograms(newPrograms);
-          
-          if (currentProgram === oldName) {
+          // Update the current program variables first if needed
+          const isCurrentProgram = currentProgram === oldName;
+          if (isCurrentProgram) {
             setCurrentProgram(newName);
-            setCurrentProgramName(newName);
-            
-            debouncedAutoSave(formData, tableData, newName);
+            // Only update currentProgramName if it matches the old name
+            if (currentProgramName === oldName) {
+              setCurrentProgramName(newName);
+            }
           }
           
-          localforage.setItem('programs', newPrograms);
-          localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
+          // Remove the old program name entry
+          delete newPrograms[oldName];
+          
+          // Update storage
+          localforage.setItem('programs', newPrograms)
+            .then(() => {
+              // Update state after storage is updated to prevent race conditions
+              setPrograms(newPrograms);
+              
+              // Only trigger auto-save if this is the current program
+              if (isCurrentProgram) {
+                // Use setTimeout to ensure all state updates have happened
+                setTimeout(() => {
+                  // Use the formData and tableData from the existing program data
+                  // instead of the component state which might be stale
+                  const programData = newPrograms[newName];
+                  if (programData) {
+                    setAutoSaveStatus('saving');
+                    localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
+                    setAutoSaveStatus('saved');
+                  }
+                }, 100);
+              } else {
+                // Just update localStorage
+                localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
+              }
+            })
+            .catch(error => {
+              console.error('Error saving renamed program:', error);
+              // Show error to user
+              setConfirmationModal({
+                show: true,
+                title: 'Error',
+                message: 'There was a problem renaming the program. Please try again.',
+                onConfirm: () => {
+                  setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
+                }
+              });
+            });
         }
         
         setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
@@ -371,6 +409,8 @@ const App = () => {
     debounce((formData, tableData, programName) => {
       if (programName && formData && tableData) {
         setAutoSaveStatus('saving');
+        
+        // Copy the programs before modifying to avoid race conditions
         const updatedPrograms = {
           ...programs,
           [programName]: {
@@ -379,9 +419,22 @@ const App = () => {
             lastModified: new Date().toISOString()
           }
         };
-        setPrograms(updatedPrograms);
+        
+        // Update localStorage first
         localStorage.setItem('savedPrograms', JSON.stringify(updatedPrograms));
-        setAutoSaveStatus('saved');
+        
+        // Then update the state
+        setPrograms(updatedPrograms);
+        
+        // Then update localforage (which is async)
+        localforage.setItem('programs', updatedPrograms)
+          .then(() => {
+            setAutoSaveStatus('saved');
+          })
+          .catch(error => {
+            console.error('Error in autoSave:', error);
+            setAutoSaveStatus('saved'); // Still set to saved to avoid UI staying in "saving" state
+          });
       }
     }, 1000),
     [programs]
