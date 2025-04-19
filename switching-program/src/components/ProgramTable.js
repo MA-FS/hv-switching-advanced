@@ -259,6 +259,8 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
   const scrollTimeoutRef = useRef(null);
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const previousTableDataRef = useRef(); // Ref to track previous tableData
+  const internalChangeRef = useRef(false); // Flag for internal updates
 
   // Add this useEffect hook
   useEffect(() => {
@@ -282,40 +284,85 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
   // Function to add a new state to history
   const addToHistory = useCallback((newRows) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(JSON.stringify(newRows));
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]); // Dependencies for useCallback
+    // This function now expects to receive the new rows directly
+    // It should not rely on the 'rows' state variable as it might not be updated yet
+    console.log('Adding to history. Current index before update:', historyIndex);
+    setHistory(currentHistory => {
+        // Read historyIndex INSIDE the functional update to get the latest value
+        const currentIndex = historyIndexRef.current; // Use ref for latest value
+        console.log('  Inside setHistory updater. Index from ref:', currentIndex);
+        const newHistory = currentHistory.slice(0, currentIndex + 1);
+        newHistory.push(JSON.stringify(newRows));
+        const newIndex = newHistory.length - 1;
+        console.log('  New history length:', newHistory.length, 'New index:', newIndex);
+        setHistoryIndex(newIndex); // Schedule index update
+        return newHistory;
+    });
+  }, []); // REMOVED historyIndex dependency
+
+  // Ref to hold the latest historyIndex, avoiding closure issues
+  const historyIndexRef = useRef(historyIndex);
+  // Keep the ref updated whenever historyIndex state changes
+  useEffect(() => {
+    historyIndexRef.current = historyIndex;
+    console.log('historyIndex state updated, updating ref:', historyIndex);
+  }, [historyIndex]);
 
   // Function to handle undo
   const handleUndo = () => {
+    // Check if there is a previous state to undo to
     if (historyIndex > 0) {
+      internalChangeRef.current = true; // Signal that this state change is internal
+      console.log("Undo triggered. Setting internalChangeRef=true");
       const newIndex = historyIndex - 1;
       const previousState = JSON.parse(history[newIndex]);
-      setRows(previousState);
-      setHistoryIndex(newIndex);
+      setRows(previousState); // Revert rows state
+      setHistoryIndex(newIndex); // Revert history index
     }
   };
 
-  // Update history when rows change
   useEffect(() => {
-    if (rows.length > 0) {
-      addToHistory(rows);
-    }
-  }, []);
+    const currentTableDataString = JSON.stringify(tableData);
+    const previousTableDataString = previousTableDataRef.current;
 
+    // If the change was triggered internally, reset the flag and skip history processing.
+    if (internalChangeRef.current) {
+        console.log("Internal change detected. Resetting flag and skipping history check.");
+        internalChangeRef.current = false; // Reset the flag HERE
+    } 
+    // Only process if the change wasn't flagged as internal
+    else {
+        // Check if the external data is actually different from the last known external data
+        if (currentTableDataString !== previousTableDataString) {
+          console.log("External change detected (different data). Resetting history.");
+          setHistory([currentTableDataString]); // Start history with the new data
+          setHistoryIndex(0);                // Reset history index
+          previousTableDataRef.current = currentTableDataString; // Update the ref
+          // Sync local rows state ONLY when external data changes
+          setRows(tableData); 
+        } else {
+          // External change, but data same as previous. Do nothing in this effect.
+          console.log("External change detected, but data is the same as previous. No action needed in tableData effect.");
+        }
+    }
+
+    // DO NOT sync derived state (lastNumberedIndex, checkReverseSection) here.
+    // Let the useEffect[rows] handle that after internal changes.
+  }, [tableData]); // Dependency array only includes tableData
+
+  // This effect updates parent and derived state AFTER rows have been internally updated
   useEffect(() => {
-    setTableData(rows);
+    // Only update parent if the change was internal (flag would have been set)
+    // This check might be redundant if internalChangeRef logic works correctly,
+    // but adds safety. Alternatively, rely on the flag resetting in the other effect.
+    // if (internalChangeRef.current) { 
+    //   setTableData(rows);
+    // }
+    setTableData(rows); // Propagate changes up regardless?
+
     updateLastNumberedIndex(rows);
     checkReverseSection(rows);
   }, [rows, setTableData]);
-
-  useEffect(() => {
-    setRows(tableData);
-    updateLastNumberedIndex(tableData);
-    checkReverseSection(tableData);
-  }, [tableData]);
 
   const updateLastNumberedIndex = (currentRows) => {
     let lastIndex = -1;
@@ -347,86 +394,86 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
   };
 
   const addRow = () => {
-    const newRow = Array(columns.length).fill('');
-    const newRows = [...rows, newRow];
-    setRows(newRows);
-    setTableData(newRows);
-    addToHistory(newRows);
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+      const newRow = Array(columns.length).fill('');
+      const newRows = [...currentRows, newRow];
+      addToHistory(newRows); // Add to history within the updater
+      return newRows;
+    });
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   const copyFromAbove = () => {
-    if (rows.length === 0) {
-      addRow();
-      return;
-    }
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+      if (currentRows.length === 0) {
+        const newRow = Array(columns.length).fill('');
+        const newRows = [newRow];
+        addToHistory(newRows);
+        return newRows;
+      }
 
-    const lastRow = rows[rows.length - 1];
-    
-    // Check if the last row is a reverse block and handle accordingly
-    if (lastRow.isReverseBlock) {
-      // If it's a reverse block, create a new empty row
-      const newRow = Array(columns.length).fill('');
-      const newRows = [...rows, newRow];
-      setRows(newRows);
-      setTableData(newRows);
+      const lastRow = currentRows[currentRows.length - 1];
+
+      if (lastRow.isReverseBlock) {
+        const newRow = Array(columns.length).fill('');
+        const newRows = [...currentRows, newRow];
+        addToHistory(newRows);
+        return newRows;
+      }
+
+      const newRow = [...lastRow];
+      const newRows = [...currentRows, newRow];
       addToHistory(newRows);
-      return;
-    }
-    
-    // Copy all columns from the row above
-    const newRow = [...lastRow];
-    
-    // Option 1: Copy all columns (remove the selective clearing)
-    // const columnsToCopy = [0, 1, 2, 3];
-    // for (let i = 0; i < newRow.length; i++) {
-    //   if (!columnsToCopy.includes(i)) {
-    //     newRow[i] = '';
-    //   }
-    // }
-
-    const newRows = [...rows, newRow];
-    setRows(newRows);
-    setTableData(newRows);
-    addToHistory(newRows);
+      return newRows;
+    });
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   const addReverseSection = () => {
     if (!hasReverseSection) {
-      // Create a special reverse section block with three rows as a single unit
-      const reverseBlock = {
-        isReverseBlock: true,
-        rows: [
-          Array(columns.length).fill(''),
-          ['', '', '', '', '', 'REVERSE', '', ''],
-          Array(columns.length).fill('')
-        ]
-      };
-      const updatedRows = [...rows, reverseBlock];
-      setRows(updatedRows);
-      setTableData(updatedRows);
-      setHasReverseSection(true);
-      addToHistory(updatedRows);
+      internalChangeRef.current = true; // Signal internal change
+      setRows(currentRows => {
+        const reverseBlock = {
+          isReverseBlock: true,
+          rows: [
+            Array(columns.length).fill(''),
+            ['', '', '', '', '', 'REVERSE', '', ''],
+            Array(columns.length).fill('')
+          ]
+        };
+        const updatedRows = [...currentRows, reverseBlock];
+        setHasReverseSection(true); // Update this state directly as well
+        addToHistory(updatedRows);
+        return updatedRows;
+      });
+       // setTableData is handled by the useEffect hook watching 'rows'
+       // setHasReverseSection is updated inside setRows now
     }
   };
 
   const handleInputChange = (e, rowIndex, colIndex) => {
     const newValue = e.target.value;
-    const newRows = rows.map((row, rIdx) => {
-      if (row.isReverseBlock) return row;
-      if (rIdx === rowIndex) {
-        const updatedRow = [...row];
-        if (colIndex === 2) {
-          updatedRow[colIndex] = newValue.toUpperCase();
-        } else {
-          updatedRow[colIndex] = newValue;
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+      const newRows = currentRows.map((row, rIdx) => {
+        if (row.isReverseBlock) return row;
+        if (rIdx === rowIndex) {
+          const updatedRow = [...row];
+          if (colIndex === 2) {
+            updatedRow[colIndex] = newValue.toUpperCase();
+          } else {
+            updatedRow[colIndex] = newValue;
+          }
+          return updatedRow;
         }
-        return updatedRow;
-      }
-      return row;
+        return row;
+      });
+      addToHistory(newRows); // Add to history within the updater
+      return newRows;
     });
-    setRows(newRows);
-    setTableData(newRows);
-    addToHistory(newRows);
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   // Function to handle row click
@@ -505,50 +552,51 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
   // Function to insert row above
   const insertRowAbove = (index) => {
-    // Don't allow inserting if the target row is part of a reverse block
-    if (rows[index]?.isReverseBlock) {
-      return;
-    }
-    
-    const newRow = Array(columns.length).fill('');
-    const newRows = [...rows.slice(0, index), newRow, ...rows.slice(index)];
-    setRows(newRows);
-    setTableData(newRows);
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+      if (currentRows[index]?.isReverseBlock) {
+          return currentRows; // Don't modify if target is reverse block
+      }
+      const newRow = Array(columns.length).fill('');
+      const newRows = [...currentRows.slice(0, index), newRow, ...currentRows.slice(index)];
+      addToHistory(newRows);
+      return newRows;
+    });
     setClickedRowIndex(null);
     setShowInsertPopup(false);
-    addToHistory(newRows);
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   const insertRowBelow = (index) => {
-    // Don't allow inserting if the target row is part of a reverse block
-    if (rows[index]?.isReverseBlock) {
-      return;
-    }
-    
-    const newRow = Array(columns.length).fill('');
-    const newRows = [...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)];
-    setRows(newRows);
-    setTableData(newRows);
+     setRows(currentRows => {
+        if (currentRows[index]?.isReverseBlock) {
+            return currentRows; // Don't modify if target is reverse block
+        }
+        const newRow = Array(columns.length).fill('');
+        const newRows = [...currentRows.slice(0, index + 1), newRow, ...currentRows.slice(index + 1)];
+        addToHistory(newRows);
+        return newRows;
+     });
     setClickedRowIndex(null);
     setShowInsertPopup(false);
-    addToHistory(newRows);
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   // New function to copy current row
   const copyCurrentRow = (index) => {
-    // Don't allow copying if the target row is part of a reverse block
-    if (rows[index]?.isReverseBlock) {
-      return;
-    }
-    
-    // Copy the current row's data
-    const currentRow = [...rows[index]];
-    const newRows = [...rows.slice(0, index + 1), currentRow, ...rows.slice(index + 1)];
-    setRows(newRows);
-    setTableData(newRows);
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+      if (currentRows[index]?.isReverseBlock) {
+        return currentRows; // Don't modify if target is reverse block
+      }
+      const currentRow = [...currentRows[index]];
+      const newRows = [...currentRows.slice(0, index + 1), currentRow, ...currentRows.slice(index + 1)];
+      addToHistory(newRows);
+      return newRows;
+    });
     setClickedRowIndex(null);
     setShowInsertPopup(false);
-    addToHistory(newRows);
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   const moveRow = useCallback((dragIndex, hoverIndex) => {
@@ -558,6 +606,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
       return;
     }
 
+    internalChangeRef.current = true; // Signal internal change
     setRows((prevRows) => {
       // Additional validation within the updater function
       if (dragIndex >= prevRows.length || hoverIndex >= prevRows.length) {
@@ -598,24 +647,29 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
   }, []); // Keep dependencies minimal
 
   const deleteRow = (rowIndex) => {
-    // Don't allow deleting if it's part of a reverse block
-    if (rows[rowIndex]?.isReverseBlock) {
-      return;
-    }
-    
-    const newRows = rows.filter((_, index) => index !== rowIndex);
-    setRows(newRows);
-    setTableData(newRows);
-    addToHistory(newRows);
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+       if (currentRows[rowIndex]?.isReverseBlock) {
+          return currentRows; // Don't modify if target is reverse block
+       }
+       const newRows = currentRows.filter((_, index) => index !== rowIndex);
+       addToHistory(newRows);
+       return newRows;
+    });
+    // setTableData is handled by the useEffect hook watching 'rows'
   };
 
   // Function to delete the entire reverse section
-  const deleteReverseSection = (index) => {
-    const newRows = rows.filter((row, i) => !row.isReverseBlock);
-    setRows(newRows);
-    setTableData(newRows);
-    setHasReverseSection(false);
-    addToHistory(newRows);
+  const deleteReverseSection = (index) => { // index is usually not needed here, maybe remove later
+    internalChangeRef.current = true; // Signal internal change
+    setRows(currentRows => {
+      const newRows = currentRows.filter((row) => !row.isReverseBlock);
+      setHasReverseSection(false); // Update this state directly as well
+      addToHistory(newRows);
+      return newRows;
+    });
+    // setTableData is handled by the useEffect hook watching 'rows'
+    // setHasReverseSection is updated inside setRows now
   };
 
   const onResize = (index) => (event, { size }) => {
