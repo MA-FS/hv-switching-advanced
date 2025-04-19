@@ -656,6 +656,30 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
             img = null;
           }
 
+          // Also preload the dalewest logo (for footer)
+          let dalewestImg;
+          try {
+            const dalewestLogoUrl = process.env.PUBLIC_URL + '/dalewest.jpg';
+            console.log('Loading dalewest logo from:', dalewestLogoUrl);
+            
+            dalewestImg = await new Promise((resolve, reject) => {
+              const image = new Image();
+              image.crossOrigin = "Anonymous";
+              image.onload = () => {
+                console.log('Dalewest logo loaded successfully, dimensions:', image.width, 'x', image.height);
+                resolve(image);
+              };
+              image.onerror = (e) => {
+                console.error('Failed to load dalewest logo:', e);
+                resolve(null);
+              };
+              image.src = dalewestLogoUrl;
+            });
+          } catch (logoError) {
+            console.error('Dalewest logo loading error:', logoError);
+            dalewestImg = null;
+          }
+
           // Function to add header
           const addHeader = () => {
             // Add logo if available
@@ -693,6 +717,44 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
               pageHeight - margin,
               { align: 'right' }
             );
+          };
+
+          // Function to add footer with branding
+          const addFooter = (pageNumber) => {
+            // Add website URL
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100); // Gray color for footer text
+            doc.text(
+              "https://www.hv.coach",
+              pageWidth / 2,
+              pageHeight - margin,
+              { align: 'center' }
+            );
+            
+            // Add dalewest logo if it was loaded
+            if (dalewestImg) {
+              try {
+                // Calculate a small size for the logo (about same height as text)
+                const footerLogoSize = 8;
+                const aspectRatio = dalewestImg.width / dalewestImg.height;
+                const footerLogoWidth = footerLogoSize * aspectRatio;
+                
+                // Add the image to the PDF
+                doc.addImage(
+                  dalewestImg, 
+                  'JPEG', 
+                  margin, 
+                  pageHeight - margin - footerLogoSize, 
+                  footerLogoWidth, 
+                  footerLogoSize
+                );
+                console.log(`Added dalewest logo to footer on page ${pageNumber}`);
+              } catch (imgError) {
+                console.error('Error adding dalewest logo to footer:', imgError);
+              }
+            } else {
+              console.warn('Dalewest logo not available for footer');
+            }
           };
 
           // Add first page header
@@ -1026,6 +1088,9 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF }) => {
                   pageHeight - margin,
                   { align: 'right' }
                 );
+                
+                // Add branding footer to each page (using synchronous function)
+                addFooter(data.pageNumber);
               },
               willDrawPage: function(data) {
                 // Set consistent top margin for all pages
