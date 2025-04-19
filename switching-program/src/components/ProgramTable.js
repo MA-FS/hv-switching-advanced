@@ -36,23 +36,30 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
 
       // Determine rectangle on screen
       const hoverBoundingRect = ref.current.getBoundingClientRect();
+      
       // Get vertical middle
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+      
+      // Add a buffer zone (hysteresis) of 10% around the middle point to prevent flickering
+      const bufferSize = (hoverBoundingRect.bottom - hoverBoundingRect.top) * 0.1;
+      const upperThreshold = hoverMiddleY + bufferSize;
+      const lowerThreshold = hoverMiddleY - bufferSize;
+      
       // Determine mouse position
       const clientOffset = monitor.getClientOffset();
       // Get pixels to the top
       const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
-      // Only perform the move when the mouse has crossed half of the items height
-      // When dragging downwards, only move when the cursor is below 50%
-      // When dragging upwards, only move when the cursor is above 50%
+      // Only perform the move when the mouse has crossed the threshold with buffer zone
+      // When dragging downwards, only move when the cursor is below threshold
+      // When dragging upwards, only move when the cursor is above threshold
 
       // Dragging downwards
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+      if (dragIndex < hoverIndex && hoverClientY < lowerThreshold) {
         return;
       }
       // Dragging upwards
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+      if (dragIndex > hoverIndex && hoverClientY > upperThreshold) {
         return;
       }
 
