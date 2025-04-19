@@ -352,13 +352,10 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
   // This effect updates parent and derived state AFTER rows have been internally updated
   useEffect(() => {
-    // Only update parent if the change was internal (flag would have been set)
-    // This check might be redundant if internalChangeRef logic works correctly,
-    // but adds safety. Alternatively, rely on the flag resetting in the other effect.
-    // if (internalChangeRef.current) { 
-    //   setTableData(rows);
-    // }
-    setTableData(rows); // Propagate changes up regardless?
+    // Only update parent if the change was internal
+    if (internalChangeRef.current) {
+        setTableData(rows);
+    }
 
     updateLastNumberedIndex(rows);
     checkReverseSection(rows);
