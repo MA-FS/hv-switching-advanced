@@ -627,9 +627,9 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           const doc = new jsPDF('landscape', 'mm', 'a4');
           const pageWidth = doc.internal.pageSize.width;
           const pageHeight = doc.internal.pageSize.height;
-          const margin = 10;
+          const margin = 8;
           const copperColor = [168, 75, 42]; // Copper tone color (#A84B2A)
-          const logoSize = 20;
+          const logoSize = 15;
           
           // Verify table data is available
           if (!rows || rows.length === 0) {
@@ -692,15 +692,15 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             }
 
             // Add title
-            doc.setFontSize(16);
+            doc.setFontSize(14);
             doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-            doc.text("HV Coach", margin + logoSize + 5, margin + 8);
-            doc.text("SWITCHING PROGRAM", margin + logoSize + 45, margin + 8);
+            doc.text("HV Coach", margin + logoSize + 3, margin + 6);
+            doc.text("SWITCHING PROGRAM", margin + logoSize + 40, margin + 6);
 
             // Add name and program number
-            doc.setFontSize(10);
+            doc.setFontSize(9);
             doc.setTextColor(0);
-            const nameY = margin + 5;
+            const nameY = margin + 4;
             doc.text("NAME", pageWidth - 120, nameY);
             doc.text(formData.name || '', pageWidth - 80, nameY);
             doc.text("Program No:", pageWidth - 120, nameY + 5);
@@ -762,38 +762,38 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
           // Location and Work Description table
           autoTable(doc, {
-            startY: margin + logoSize + 5,
+            startY: margin + logoSize + 2,
             body: [
               [
                 { content: 'Location:', styles: { fontStyle: 'bold' } },
-                { content: formData.location || '' }
-              ],
-              [
+                { content: formData.location || '' },
                 { content: 'Work Description:', styles: { fontStyle: 'bold' } },
                 { content: formData.workDescription || '' }
               ]
             ],
             theme: 'grid',
             styles: {
-              fontSize: 10,
-              cellPadding: 4,
+              fontSize: 9,
+              cellPadding: 2,
               lineColor: [128, 128, 128],
               lineWidth: 0.1
             },
             columnStyles: {
-              0: { cellWidth: 40 },
-              1: { cellWidth: 'auto' }
+              0: { cellWidth: 20 },
+              1: { cellWidth: 60 },
+              2: { cellWidth: 35 },
+              3: { cellWidth: 'auto' }
             },
             margin: { left: margin, right: margin }
           });
 
-          // Signature section table with copper tone header
+          // More compact signature section table with copper tone header
           autoTable(doc, {
-            startY: doc.lastAutoTable.finalY + 5,
+            startY: doc.lastAutoTable.finalY + 2,
             head: [
               [
                 { content: '', styles: { fillColor: copperColor } },
-                { content: 'Name(print)', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
+                { content: 'Name', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
                 { content: 'Signature', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
                 { content: 'Time', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
                 { content: 'Date', styles: { fillColor: copperColor, textColor: [255, 255, 255] } },
@@ -826,24 +826,24 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             ],
             theme: 'grid',
             styles: {
-              fontSize: 10,
-              cellPadding: 2,
+              fontSize: 8,
+              cellPadding: 1,
               lineColor: [128, 128, 128],
               lineWidth: 0.1
             },
             columnStyles: {
-              0: { cellWidth: 30 },
-              1: { cellWidth: 'auto' },
-              2: { cellWidth: 'auto' },
-              3: { cellWidth: 'auto' },
-              4: { cellWidth: 'auto' },
+              0: { cellWidth: 20 },
+              1: { cellWidth: 40 },
+              2: { cellWidth: 40 },
+              3: { cellWidth: 15 },
+              4: { cellWidth: 15 },
               5: { cellWidth: 'auto' }
             },
             margin: { left: margin, right: margin }
           });
 
           // Main switching program table
-          const tableStartY = doc.lastAutoTable.finalY + 5;
+          const tableStartY = doc.lastAutoTable.finalY + 3;
           
           // Process table data
           const tableRows = [];
@@ -970,7 +970,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           const subsequentPagesContentHeight = pageHeight - (margin + 15) - margin; // Account for header and margins
           
           // Calculate approximate rows per page based on row height
-          const rowHeight = 12; // Approximate height of each row in mm
+          const rowHeight = 10; // Reduced from 12 - approximate height of each row in mm
           const firstPageRows = Math.floor(firstPageContentHeight / rowHeight);
           const subsequentPagesRows = Math.floor(subsequentPagesContentHeight / rowHeight);
           
@@ -1051,7 +1051,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                 if (data.pageNumber > 1) {
                   // Clear the header area
                   doc.setFillColor(255, 255, 255);
-                  doc.rect(0, 0, pageWidth, margin + 25, 'F');
+                  doc.rect(0, 0, pageWidth, margin + 20, 'F');
                   
                   // Add header with exact same spacing as first page
                   if (img) {
@@ -1063,15 +1063,15 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   }
 
                   // Add title with exact same spacing as first page
-                  doc.setFontSize(16);
+                  doc.setFontSize(14);
                   doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-                  doc.text("HV Coach", margin + logoSize + 5, margin + 8);
-                  doc.text("SWITCHING PROGRAM", margin + logoSize + 45, margin + 8);
+                  doc.text("HV Coach", margin + logoSize + 3, margin + 6);
+                  doc.text("SWITCHING PROGRAM", margin + logoSize + 40, margin + 6);
 
                   // Add name and program number with exact same spacing as first page
-                  doc.setFontSize(10);
+                  doc.setFontSize(9);
                   doc.setTextColor(0);
-                  const nameY = margin + 5;
+                  const nameY = margin + 4;
                   doc.text("NAME", pageWidth - 120, nameY);
                   doc.text(formData.name || '', pageWidth - 80, nameY);
                   doc.text("Program No:", pageWidth - 120, nameY + 5);
@@ -1094,7 +1094,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               },
               willDrawPage: function(data) {
                 // Set consistent top margin for all pages
-                data.settings.margin.top = margin + 25; // 25mm space for header
+                data.settings.margin.top = margin + 20;
                 data.settings.margin.left = margin;
                 data.settings.margin.right = margin;
                 data.settings.margin.bottom = margin + 10;
