@@ -226,6 +226,11 @@ const App = () => {
         const newPrograms = { ...programs };
         delete newPrograms[programName];
         setPrograms(newPrograms);
+        
+        // Persist the deletion to both storage methods
+        localforage.setItem('programs', newPrograms);
+        localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
+        
         if (programName === currentProgram) {
           setCurrentProgram('');
           setFormData({

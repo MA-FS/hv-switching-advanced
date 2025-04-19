@@ -1578,19 +1578,28 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                 <>
                   <span className="popup-title">Insert</span>
                   <button 
-                    onClick={() => insertRowAbove(clickedRowIndex)} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      insertRowAbove(clickedRowIndex);
+                    }} 
                     className="btn btn-outline-primary btn-sm my-1"
                   >
                     <i className="bi bi-arrow-up"></i> Above
                   </button>
                   <button 
-                    onClick={() => insertRowBelow(clickedRowIndex)} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      insertRowBelow(clickedRowIndex);
+                    }} 
                     className="btn btn-outline-primary btn-sm my-1"
                   >
                     <i className="bi bi-arrow-down"></i> Below
                   </button>
                   <button 
-                    onClick={() => copyCurrentRow(clickedRowIndex)} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyCurrentRow(clickedRowIndex);
+                    }} 
                     className="btn btn-outline-primary btn-sm my-1"
                   >
                     <i className="bi bi-files"></i> Copy Below
@@ -1609,19 +1618,28 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                 <>
                   <span className="popup-title mr-2">Insert Row:</span>
                   <button 
-                    onClick={() => insertRowAbove(clickedRowIndex)} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      insertRowAbove(clickedRowIndex);
+                    }} 
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-arrow-up"></i> Above
                   </button>
                   <button 
-                    onClick={() => insertRowBelow(clickedRowIndex)} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      insertRowBelow(clickedRowIndex);
+                    }} 
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-arrow-down"></i> Below
                   </button>
                   <button 
-                    onClick={() => copyCurrentRow(clickedRowIndex)} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyCurrentRow(clickedRowIndex);
+                    }} 
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-files"></i> Copy Below
