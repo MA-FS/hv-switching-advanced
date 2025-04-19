@@ -725,6 +725,7 @@ footer {
   gap: 15px;
   max-width: 1140px;
   margin: 0 auto;
+  flex-wrap: wrap;
 }
 
 .floating-content h4 {
@@ -737,14 +738,24 @@ footer {
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 .floating-content button {
-  padding: 8px 20px;
+  padding: 8px 16px;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.floating-content .auto-save-status {
+  white-space: nowrap;
 }
 
 @keyframes slideDown {
@@ -766,12 +777,15 @@ footer {
   background-color: var(--bg-light);
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .left-content {
   display: flex;
   align-items: center;
   gap: 15px;
+  flex-wrap: wrap;
 }
 
 .left-content h4 {
@@ -783,12 +797,14 @@ footer {
   font-weight: 600;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .right-content {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Responsive adjustments */

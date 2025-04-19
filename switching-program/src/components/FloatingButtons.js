@@ -3,8 +3,10 @@ import '../styles.css';
 
 const FloatingButtons = ({ 
   currentProgram, 
-  handleUpdateCurrentProgram, 
-  autoSaveStatus 
+  handleUpdateCurrentProgram,
+  autoSaveStatus,
+  exportPDFFunction,
+  handleNewProgram
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -38,6 +40,16 @@ const FloatingButtons = ({
         <h4 className="mr-3">Current Program: {currentProgram}</h4>
         <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
           <i className="bi bi-save"></i> Save Current Program
+        </button>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => exportPDFFunction && exportPDFFunction()} 
+          disabled={!exportPDFFunction}
+        >
+          <i className="bi bi-file-earmark-pdf"></i> Export PDF
+        </button>
+        <button className="btn btn-warning" onClick={handleNewProgram}>
+          <i className="bi bi-file-earmark-plus"></i> New Program
         </button>
         {autoSaveStatus && (
           <span className="auto-save-status">{autoSaveStatus}</span>

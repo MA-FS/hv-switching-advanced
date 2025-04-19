@@ -409,7 +409,7 @@ const App = () => {
               <>
                 <h4 className="mr-3">Current Program: {currentProgram}</h4>
                 <button className="btn btn-primary" onClick={handleUpdateCurrentProgram}>
-                  Save Current Program
+                  <i className="bi bi-save"></i> Save Current Program
                 </button>
               </>
             ) : (
@@ -420,6 +420,17 @@ const App = () => {
             </span>
           </div>
           <div className="right-content">
+            <button 
+              className="btn btn-primary mr-2" 
+              onClick={() => exportPDFFunction && exportPDFFunction()} 
+              title="Export the current program to a PDF document"
+              disabled={!exportPDFFunction}
+            >
+              <i className="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
+            <button className="btn btn-warning mr-2" onClick={handleNewProgram}>
+              <i className="bi bi-file-earmark-plus"></i> New Program
+            </button>
             <button className="btn btn-info" onClick={handleToggleReadme}>
               <i className="fas fa-question-circle"></i> View Readme
             </button>
@@ -435,33 +446,6 @@ const App = () => {
             onExportPDF={setExportPDF} 
             onError={handlePDFError}
           />
-          <div className="d-flex justify-content-between mt-3">
-            <div className="d-flex flex-grow-1 mr-2">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter program name"
-                value={currentProgramName}
-                onChange={(e) => setCurrentProgramName(e.target.value)}
-              />
-              <button className="btn btn-success ml-2" onClick={handleSaveProgram}>
-                <i className="bi bi-save"></i> Save As
-              </button>
-            </div>
-            <div>
-              <button 
-                className="btn btn-primary mr-2" 
-                onClick={() => exportPDFFunction && exportPDFFunction()} 
-                title="Export the current program to a PDF document"
-                disabled={!exportPDFFunction}
-              >
-                <i className="bi bi-file-earmark-pdf"></i> Export PDF
-              </button>
-              <button className="btn btn-warning" onClick={handleNewProgram}>
-                <i className="bi bi-file-earmark-plus"></i> New Program
-              </button>
-            </div>
-          </div>
           
           <div className="mt-4">
             <h2 className="text-primary mb-4">Saved Programs</h2>
@@ -548,6 +532,8 @@ const App = () => {
         currentProgram={currentProgram}
         handleUpdateCurrentProgram={handleUpdateCurrentProgram}
         autoSaveStatus={autoSaveStatus}
+        exportPDFFunction={exportPDFFunction}
+        handleNewProgram={handleNewProgram}
       />
     </DndProvider>
   );
