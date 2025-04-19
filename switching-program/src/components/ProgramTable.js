@@ -646,7 +646,9 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           }
 
           // Load logo
-          const logoUrl = process.env.PUBLIC_URL + '/logo.PNG';
+          const logoUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://ma-fs.github.io/hv-switching-advanced/logo.PNG' 
+            : process.env.PUBLIC_URL + '/logo.PNG';
           
           // Load image asynchronously
           let img;
@@ -655,7 +657,10 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               const image = new Image();
               image.crossOrigin = "Anonymous";
               image.onload = () => resolve(image);
-              image.onerror = (e) => resolve(null);
+              image.onerror = (e) => {
+                console.error('Failed to load logo:', e, logoUrl);
+                resolve(null);
+              };
               image.src = logoUrl;
             });
           } catch (logoError) {
