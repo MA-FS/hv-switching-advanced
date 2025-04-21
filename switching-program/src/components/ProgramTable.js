@@ -820,8 +820,8 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             // Add title
             doc.setFontSize(14);
             doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-            doc.text("HV Coach", margin + logoSize + 3, margin + 6);
-            doc.text("SWITCHING PROGRAM", margin + logoSize + 40, margin + 6);
+            // doc.text("HV Coach", margin + logoSize + 3, margin + 6);
+            doc.text("HV SWITCHING PROGRAM", margin + logoSize + 40, margin + 6);
 
             // Add name and program number
             doc.setFontSize(9);
