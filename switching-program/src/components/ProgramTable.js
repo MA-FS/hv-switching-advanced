@@ -741,36 +741,36 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             img = null;
           }
 
-          // Also preload the dalewest logo (for footer)
-          let dalewestImg;
+          // Also preload the esipac logo (for footer)
+          let esipacImg;
           try {
-            const dalewestLogoUrl = process.env.NODE_ENV === 'production'
-              ? 'https://ma-fs.github.io/hv-switching-advanced/dalewest.jpg'
-              : process.env.PUBLIC_URL + '/dalewest.jpg';
+            const esipacLogoUrl = process.env.NODE_ENV === 'production'
+              ? 'https://ma-fs.github.io/hv-switching-advanced/esipac.jpg'
+              : process.env.PUBLIC_URL + '/esipac.jpg';
             
-            console.log('Loading dalewest logo from:', dalewestLogoUrl);
+            console.log('Loading esipac logo from:', esipacLogoUrl);
             
-            dalewestImg = await new Promise((resolve, reject) => {
+            esipacImg = await new Promise((resolve, reject) => {
               const image = new Image();
               image.crossOrigin = "Anonymous";
               image.onload = () => {
-                console.log('Dalewest logo loaded successfully, dimensions:', image.width, 'x', image.height);
+                console.log('esipac logo loaded successfully, dimensions:', image.width, 'x', image.height);
                 resolve(image);
               };
               image.onerror = (e) => {
-                console.error('Failed to load dalewest logo:', e);
+                console.error('Failed to load esipac logo:', e);
                 // Try a fallback URL
                 if (process.env.NODE_ENV === 'production') {
-                  const fallbackUrl = `${window.location.origin}/hv-switching-advanced/dalewest.jpg`;
-                  console.log('Attempting fallback URL for dalewest logo:', fallbackUrl);
+                  const fallbackUrl = `${window.location.origin}/hv-switching-advanced/esipac.jpg`;
+                  console.log('Attempting fallback URL for esipac logo:', fallbackUrl);
                   const fallbackImage = new Image();
                   fallbackImage.crossOrigin = "Anonymous";
                   fallbackImage.onload = () => {
-                    console.log('Dalewest logo loaded with fallback URL');
+                    console.log('esipac logo loaded with fallback URL');
                     resolve(fallbackImage);
                   };
                   fallbackImage.onerror = () => {
-                    console.error('Failed to load dalewest logo with fallback URL');
+                    console.error('Failed to load esipac logo with fallback URL');
                     resolve(null);
                   };
                   fallbackImage.src = fallbackUrl;
@@ -778,11 +778,11 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   resolve(null);
                 }
               };
-              image.src = dalewestLogoUrl;
+              image.src = esipacLogoUrl;
             });
           } catch (logoError) {
-            console.error('Dalewest logo loading error:', logoError);
-            dalewestImg = null;
+            console.error('esipac logo loading error:', logoError);
+            esipacImg = null;
           }
 
           // Function to add header
@@ -844,29 +844,29 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               { align: 'center' }
             );
             
-            // Add dalewest logo if it was loaded
-            if (dalewestImg) {
+            // Add esipac logo if it was loaded
+            if (esipacImg) {
               try {
                 // Calculate a small size for the logo (about same height as text)
                 const footerLogoSize = 8;
-                const aspectRatio = dalewestImg.width / dalewestImg.height;
+                const aspectRatio = esipacImg.width / esipacImg.height;
                 const footerLogoWidth = footerLogoSize * aspectRatio;
                 
                 // Add the image to the PDF
                 doc.addImage(
-                  dalewestImg, 
+                  esipacImg, 
                   'JPEG', 
                   margin, 
                   pageHeight - margin - footerLogoSize, 
                   footerLogoWidth, 
                   footerLogoSize
                 );
-                console.log(`Added dalewest logo to footer on page ${pageNumber}`);
+                console.log(`Added esipac logo to footer on page ${pageNumber}`);
               } catch (imgError) {
-                console.error('Error adding dalewest logo to footer:', imgError);
+                console.error('Error adding esipac logo to footer:', imgError);
               }
             } else {
-              console.warn('Dalewest logo not available for footer');
+              console.warn('esipac logo not available for footer');
             }
           };
 
