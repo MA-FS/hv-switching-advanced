@@ -1586,6 +1586,83 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               font-size: 1.4rem;
               display: block;
             }
+
+            /* --- Custom Button Styles --- */
+            .button-container {
+              margin-top: 15px; /* Add some space above buttons */
+            }
+            .button-container .btn {
+              margin-left: 8px; /* Add consistent spacing */
+              transition: all 0.2s ease-in-out;
+              border-radius: 4px;
+              padding: 8px 16px; /* Increased padding */
+              font-size: 1.5rem; /* Increased font size */
+            }
+            .button-container .btn:first-child {
+              margin-left: 0; /* Remove margin for the first button */
+            }
+
+            /* Primary Button (Add Row) */
+            .btn-custom-primary {
+              background-color: #A84B2A; /* Darker Copper tone from PDF */
+              border: 1px solid #854021; /* Even darker copper border */
+              color: #FFFFFF;
+            }
+            .btn-custom-primary:hover {
+              background-color: #B06745; /* Lighter copper on hover */
+              border-color: #A84B2A;
+              color: #FFFFFF;
+            }
+            .btn-custom-primary:disabled {
+              background-color: #A84B2A;
+              border-color: #854021;
+              opacity: 0.65;
+            }
+
+            /* Secondary Buttons (Undo, Redo, Copy, Reverse) */
+            .btn-custom-secondary {
+              background-color: #444444; /* Dark gray background */
+              border: 1px solid #555555; /* Slightly lighter border */
+              color: #C27E5F; /* Copper text */
+            }
+            .btn-custom-secondary:hover {
+              background-color: #555555; /* Lighter gray on hover */
+              border-color: #666666;
+              color: #D3957D; /* Lighter copper text */
+            }
+            .btn-custom-secondary:active {
+              background-color: #555555; /* Keep hover background during click */
+              border-color: #666666;
+              color: #D3957D; /* Use Lighter copper text color from hover state */
+              box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Optional: slight inner shadow */
+            }
+            .btn-custom-secondary:disabled {
+              background-color: #444444;
+              border-color: #555555;
+              color: #C27E5F;
+              opacity: 0.5; /* Make dimmer when disabled */
+            }
+
+            /* Ensure icons within buttons are styled correctly */
+            .button-container .btn .bi {
+              font-size: 1.2rem; /* Slightly larger icons */
+              vertical-align: -0.1em;
+              margin-right: 5px; /* Space between icon and text */
+            }
+            .btn-custom-primary .bi {
+              color: #FFFFFF; /* White icon for primary */
+            }
+            .btn-custom-secondary .bi {
+              color: #C27E5F; /* Copper icon for secondary */
+            }
+            .btn-custom-secondary:hover .bi {
+              color: #D3957D; /* Lighter copper icon */
+            }
+            .btn:disabled .bi {
+               /* Ensure icon opacity matches button opacity */
+              opacity: inherit; 
+            }
+            /* --- End Custom Button Styles --- */
           `}
         </style>
         <div className="header-section">
@@ -1791,7 +1868,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
         </div>
         <div className="button-container">
           <button 
-            className="btn btn-secondary"
+            className="btn btn-custom-secondary"
             onClick={handleUndo}
             disabled={historyIndex <= 0}
             title="Undo last action"
@@ -1799,26 +1876,26 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             <i className="bi bi-arrow-counterclockwise"></i> Undo
           </button>
           <button
-            className="btn btn-secondary ml-2" // Added ml-2 for spacing
+            className="btn btn-custom-secondary" // Removed ml-2, handled by base style
             onClick={handleRedo}
             disabled={historyIndex >= history.length - 1}
             title="Redo last undone action"
           >
             <i className="bi bi-arrow-clockwise"></i> Redo
           </button>
-          <button className="btn btn-success" onClick={addRow} title="Add a new empty row to the table">
-            <i className="bi bi-plus-lg mr-1"></i> Add Row
+          <button className="btn btn-custom-primary" onClick={addRow} title="Add a new empty row to the table">
+            <i className="bi bi-plus-lg"></i> Add Row
           </button>
-          <button className="btn btn-secondary" onClick={copyFromAbove} title="Copy the last row and add it as a new row">
-            <i className="bi bi-clipboard-plus mr-1"></i> Copy Above
+          <button className="btn btn-custom-secondary" onClick={copyFromAbove} title="Copy the last row and add it as a new row">
+            <i className="bi bi-clipboard-plus"></i> Copy Above
           </button>
           <button 
-            className="btn btn-secondary"
+            className="btn btn-custom-secondary"
             onClick={addReverseSection}
             disabled={hasReverseSection}
             title="Add a reverse section to the program (can only be added once)"
           >
-            <i className="bi bi-arrow-left-right mr-1"></i> Reverse
+            <i className="bi bi-arrow-left-right"></i> Reverse
           </button>
         </div>
       </div>
