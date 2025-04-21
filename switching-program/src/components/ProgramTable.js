@@ -1720,7 +1720,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                     }} 
                     className="btn btn-outline-primary btn-sm my-1"
                   >
-                    <i className="bi bi-files"></i> Copy Below
+                    <i className="bi bi-files"></i> Duplicate
                   </button>
                   <button 
                     onClick={() => {
@@ -1760,7 +1760,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                     }} 
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
-                    <i className="bi bi-files"></i> Copy Below
+                    <i className="bi bi-files"></i> Duplicate
                   </button>
                   <button 
                     onClick={() => {
@@ -1787,6 +1787,9 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           </button>
           <button className="btn btn-success" onClick={addRow} title="Add a new empty row to the table">
             <i className="bi bi-plus-lg mr-1"></i> Add Row
+          </button>
+          <button className="btn btn-secondary" onClick={copyFromAbove} title="Copy the last row and add it as a new row">
+            <i className="bi bi-clipboard-plus mr-1"></i> Copy Above
           </button>
           <button 
             className="btn btn-secondary"
