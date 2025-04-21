@@ -79,7 +79,23 @@ const App = () => {
 
   useEffect(() => {
     if (Object.keys(programs).length > 0) {
-      localforage.setItem('programs', programs);
+      console.log('Persisting programs state to storage...');
+      // Persist to localforage (async)
+      localforage.setItem('programs', programs).catch(error => {
+        console.error('Error saving programs to localforage:', error);
+        // Handle error appropriately, maybe show a notification
+      });
+      // Persist to localStorage (sync) as a backup or for other purposes
+      try {
+        localStorage.setItem('savedPrograms', JSON.stringify(programs));
+      } catch (error) {
+        console.error('Error saving programs to localStorage:', error);
+        // Handle potential storage quota errors
+      }
+    } else {
+       // Optional: Handle the case where programs become empty (e.g., delete the last one)
+       // localforage.removeItem('programs');
+       // localStorage.removeItem('savedPrograms');
     }
   }, [programs]);
 
@@ -353,43 +369,12 @@ const App = () => {
           
           // Remove the old program name entry
           delete newPrograms[oldName];
-          
-          // Update storage
-          localforage.setItem('programs', newPrograms)
-            .then(() => {
-              // Update state after storage is updated to prevent race conditions
-              setPrograms(newPrograms);
-              
-              // Only trigger auto-save if this is the current program
-              if (isCurrentProgram) {
-                // Use setTimeout to ensure all state updates have happened
-                setTimeout(() => {
-                  // Use the formData and tableData from the existing program data
-                  // instead of the component state which might be stale
-                  const programData = newPrograms[newName];
-                  if (programData) {
-                    setAutoSaveStatus('saving');
-                    localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
-                    setAutoSaveStatus('saved');
-                  }
-                }, 100);
-              } else {
-                // Just update localStorage
-                localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
-              }
-            })
-            .catch(error => {
-              console.error('Error saving renamed program:', error);
-              // Show error to user
-              setConfirmationModal({
-                show: true,
-                title: 'Error',
-                message: 'There was a problem renaming the program. Please try again.',
-                onConfirm: () => {
-                  setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
-                }
-              });
-            });
+
+          // Update state immediately to reflect the rename
+          setPrograms(newPrograms);
+
+          // Storage updates are now handled by the useEffect hook watching 'programs' state.
+          // Removed localforage.setItem and subsequent logic here.
         }
         
         setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
@@ -410,34 +395,30 @@ const App = () => {
       if (programName && formData && tableData) {
         setAutoSaveStatus('saving');
         
-        // Copy the programs before modifying to avoid race conditions
-        const updatedPrograms = {
-          ...programs,
-          [programName]: {
-            formData,
-            tableData,
-            lastModified: new Date().toISOString()
-          }
-        };
+        // Use functional update to avoid issues with stale state
+        setPrograms(prevPrograms => {
+          // Create the updated entry
+          const updatedEntry = {
+            [programName]: {
+              formData,
+              tableData,
+              lastModified: new Date().toISOString()
+            }
+          };
+          // Merge with previous state
+          return { ...prevPrograms, ...updatedEntry };
+        });
+
+        // Persistence is handled by the useEffect watching 'programs'
+        // Removed localStorage.setItem and localforage.setItem calls here.
         
-        // Update localStorage first
-        localStorage.setItem('savedPrograms', JSON.stringify(updatedPrograms));
-        
-        // Then update the state
-        setPrograms(updatedPrograms);
-        
-        // Then update localforage (which is async)
-        localforage.setItem('programs', updatedPrograms)
-          .then(() => {
-            setAutoSaveStatus('saved');
-          })
-          .catch(error => {
-            console.error('Error in autoSave:', error);
-            setAutoSaveStatus('saved'); // Still set to saved to avoid UI staying in "saving" state
-          });
+        // Update autosave status optimistically or after state update confirmation if needed
+        // For simplicity, we'll update it here, assuming state update is fast enough.
+        // A more robust approach might wait for the useEffect to finish saving.
+        setAutoSaveStatus('saved'); 
       }
     }, 1000),
-    [programs]
+    [] 
   );
 
   useEffect(() => {

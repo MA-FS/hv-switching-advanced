@@ -838,7 +838,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100); // Gray color for footer text
             doc.text(
-              "www.hv.coach",
+              "https://www.hv.coach/",
               pageWidth / 2,
               pageHeight - margin,
               { align: 'center' }
