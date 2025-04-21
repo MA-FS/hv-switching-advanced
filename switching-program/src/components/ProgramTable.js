@@ -321,6 +321,19 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
     }
   };
 
+  // Function to handle redo
+  const handleRedo = () => {
+    // Check if there is a future state to redo to
+    if (historyIndex < history.length - 1) {
+      internalChangeRef.current = true; // Signal that this state change is internal
+      console.log("Redo triggered. Setting internalChangeRef=true");
+      const newIndex = historyIndex + 1;
+      const nextState = JSON.parse(history[newIndex]);
+      setRows(nextState); // Move to next state in history
+      setHistoryIndex(newIndex); // Update history index
+    }
+  };
+
   useEffect(() => {
     const currentTableDataString = JSON.stringify(tableData);
     const previousTableDataString = previousTableDataRef.current;
@@ -1784,6 +1797,14 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             title="Undo last action"
           >
             <i className="bi bi-arrow-counterclockwise"></i> Undo
+          </button>
+          <button
+            className="btn btn-secondary ml-2" // Added ml-2 for spacing
+            onClick={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+            title="Redo last undone action"
+          >
+            <i className="bi bi-arrow-clockwise"></i> Redo
           </button>
           <button className="btn btn-success" onClick={addRow} title="Add a new empty row to the table">
             <i className="bi bi-plus-lg mr-1"></i> Add Row
