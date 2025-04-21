@@ -133,6 +133,10 @@ const ReadmeSplash = ({ show, onClose }) => {
             <li style={customStyles.listItem}>Add reverse sections with automatic formatting</li>
             <li style={customStyles.listItem}>Export your programs to PDF format</li>
             <li style={customStyles.listItem}>Save and manage multiple programs</li>
+            <li style={customStyles.listItem}>Advanced row actions: Insert Above/Below, Duplicate via '+' icon</li>
+            <li style={customStyles.listItem}>Copy the row above for quick duplication</li>
+            <li style={customStyles.listItem}>Undo/Redo your changes</li>
+            <li style={customStyles.listItem}>Resizable table columns</li>
           </ul>
         </div>
         
@@ -158,10 +162,13 @@ const ReadmeSplash = ({ show, onClose }) => {
           <p>Click the "Reverse" button to add a reverse section to your program. This creates a clearly marked separator in your switching program.</p>
           
           <p style={customStyles.copperText}>Rearranging Steps:</p>
-          <p>You can drag and drop rows to reorder your switching steps as needed.</p>
+          <p>Click and hold the grip handle (<i className="bi bi-grip-vertical"></i>) on the left of a row to drag it to a new position.</p>
           
-          <p style={customStyles.copperText}>Autosave:</p>
-          <p>Your work is automatically saved while you edit your current program.</p>
+          <p style={customStyles.copperText}>Inserting & Duplicating Rows:</p>
+          <p>Click the plus icon (<i className="bi bi-plus-circle-fill"></i>) on any non-reverse row to open a menu with options to Insert Above, Insert Below, or Duplicate the row.</p>
+          
+          <p style={customStyles.copperText}>Undo/Redo:</p>
+          <p>Made a mistake? Use the Undo (<i className="bi bi-arrow-counterclockwise"></i>) and Redo (<i className="bi bi-arrow-clockwise"></i>) buttons to step through your recent actions.</p>
         </div>
         
         <button 
