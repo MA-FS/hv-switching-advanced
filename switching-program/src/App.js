@@ -450,7 +450,10 @@ const App = () => {
                 </button>
               </>
             ) : (
-              <h4 className="mr-3">New Unsaved Program</h4>
+              <div className="unsaved-program-indicator">
+                <i className="bi bi-file-earmark"></i>
+                Unsaved Program
+              </div>
             )}
             <span className={`auto-save-status ${autoSaveStatus}`}>
               {autoSaveStatus === 'saving' ? 'Saving...' : 'All changes saved'}

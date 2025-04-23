@@ -6,7 +6,7 @@ const InfoForm = ({ formData, handleChange }) => (
   <div className="info-container">
     <div className="form-top-section">
       <div className="title-section">
-        <h2 className="static-title">HV Coach SWITCHING PROGRAM</h2>
+        <h2 className="static-title">HV Switching Program Creator</h2>
       </div>
       <div className="name-section">
         <div className="name-field">
