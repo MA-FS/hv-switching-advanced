@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import localforage from 'localforage';
 import { debounce } from 'lodash';
-import Header from './components/Header';
 import InfoForm from './components/InfoForm';
 import ProgramTable from './components/ProgramTable';
 import Footer from './components/Footer';
@@ -147,7 +146,7 @@ const App = () => {
               setSaveConfirmation(true);
             }
           }
-          
+
           setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
         },
         onCancel: () => {
@@ -156,14 +155,14 @@ const App = () => {
       });
       return;
     }
-    
+
     if (currentProgramName === currentProgram) {
       setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
       setCurrentProgramName('');
       setSaveConfirmation(true);
       return;
     }
-    
+
     if (programs[currentProgramName] && currentProgramName !== currentProgram) {
       setConfirmationModal({
         show: true,
@@ -179,7 +178,7 @@ const App = () => {
       });
       return;
     }
-    
+
     setPrograms({ ...programs, [currentProgramName]: { formData, tableData } });
     setCurrentProgram(currentProgramName);
     setCurrentProgramName('');
@@ -198,9 +197,9 @@ const App = () => {
       });
       return;
     }
-    
+
     const serializedTableData = JSON.parse(JSON.stringify(tableData));
-    
+
     setPrograms(prevPrograms => ({
       ...prevPrograms,
       [currentProgram]: { formData, tableData: serializedTableData }
@@ -223,11 +222,11 @@ const App = () => {
         setFormData(program.formData);
         setTableData(program.tableData);
         setCurrentProgram(programName);
-        
+
         setTimeout(() => {
           debouncedAutoSave(program.formData, program.tableData, programName);
         }, 100);
-        
+
         setConfirmationModal({ show: false, title: '', message: '', onConfirm: null });
       }
     });
@@ -242,11 +241,11 @@ const App = () => {
         const newPrograms = { ...programs };
         delete newPrograms[programName];
         setPrograms(newPrograms);
-        
+
         // Persist the deletion to both storage methods
         localforage.setItem('programs', newPrograms);
         localStorage.setItem('savedPrograms', JSON.stringify(newPrograms));
-        
+
         if (programName === currentProgram) {
           setCurrentProgram('');
           setFormData({
@@ -276,10 +275,10 @@ const App = () => {
   };
 
   const handleNewProgram = () => {
-    const hasContent = 
-      tableData.length > 0 || 
+    const hasContent =
+      tableData.length > 0 ||
       Object.values(formData).some(value => value.trim() !== '');
-      
+
     if (hasContent) {
       setConfirmationModal({
         show: true,
@@ -294,7 +293,7 @@ const App = () => {
       promptForNewProgram();
     }
   };
-  
+
   const promptForNewProgram = () => {
     setInputModal({
       show: true,
@@ -352,11 +351,11 @@ const App = () => {
             setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
             return;
           }
-          
+
           // Copy the program data with the new name first
           const newPrograms = { ...programs };
           newPrograms[newName] = { ...newPrograms[oldName] };
-          
+
           // Update the current program variables first if needed
           const isCurrentProgram = currentProgram === oldName;
           if (isCurrentProgram) {
@@ -366,7 +365,7 @@ const App = () => {
               setCurrentProgramName(newName);
             }
           }
-          
+
           // Remove the old program name entry
           delete newPrograms[oldName];
 
@@ -376,7 +375,7 @@ const App = () => {
           // Storage updates are now handled by the useEffect hook watching 'programs' state.
           // Removed localforage.setItem and subsequent logic here.
         }
-        
+
         setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null });
       }
     });
@@ -394,7 +393,7 @@ const App = () => {
     debounce((formData, tableData, programName) => {
       if (programName && formData && tableData) {
         setAutoSaveStatus('saving');
-        
+
         // Use functional update to avoid issues with stale state
         setPrograms(prevPrograms => {
           // Create the updated entry
@@ -411,14 +410,14 @@ const App = () => {
 
         // Persistence is handled by the useEffect watching 'programs'
         // Removed localStorage.setItem and localforage.setItem calls here.
-        
+
         // Update autosave status optimistically or after state update confirmation if needed
         // For simplicity, we'll update it here, assuming state update is fast enough.
         // A more robust approach might wait for the useEffect to finish saving.
-        setAutoSaveStatus('saved'); 
+        setAutoSaveStatus('saved');
       }
     }, 1000),
-    [] 
+    []
   );
 
   useEffect(() => {
@@ -440,7 +439,6 @@ const App = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Header />
       <div className="container-fluid my-4">
         <div className="header-container">
           <div className="left-content">
@@ -459,9 +457,9 @@ const App = () => {
             </span>
           </div>
           <div className="right-content">
-            <button 
-              className="btn btn-primary mr-2" 
-              onClick={() => exportPDFFunction && exportPDFFunction()} 
+            <button
+              className="btn btn-primary mr-2"
+              onClick={() => exportPDFFunction && exportPDFFunction()}
               title="Export the current program to a PDF document"
               disabled={!exportPDFFunction}
             >
@@ -478,22 +476,22 @@ const App = () => {
         <div className="container">
           <InfoForm formData={formData} handleChange={handleChange} />
           <hr className="separator" />
-          <ProgramTable 
-            tableData={tableData} 
-            setTableData={handleTableDataChange} 
-            formData={formData} 
-            onExportPDF={setExportPDF} 
+          <ProgramTable
+            tableData={tableData}
+            setTableData={handleTableDataChange}
+            formData={formData}
+            onExportPDF={setExportPDF}
             onError={handlePDFError}
           />
-          
+
           <div className="mt-4">
             <h2 className="text-primary mb-4">Saved Programs</h2>
             <div className="saved-programs-grid">
               {Object.keys(programs).length === 0 ? (
                 <div className="no-programs">
                   <p>No saved programs yet.</p>
-                  <button 
-                    className="btn btn-primary mt-3" 
+                  <button
+                    className="btn btn-primary mt-3"
                     onClick={handleNewProgram}
                   >
                     <i className="bi bi-file-earmark-plus"></i> Create Your First Program
@@ -508,8 +506,8 @@ const App = () => {
                     <div className="program-card-body">
                       <div className="program-metadata">
                         <span className="program-last-modified">
-                          {programs[programName].lastModified ? 
-                            `Last modified: ${new Date(programs[programName].lastModified).toLocaleDateString()}` : 
+                          {programs[programName].lastModified ?
+                            `Last modified: ${new Date(programs[programName].lastModified).toLocaleDateString()}` :
                             'Recently created'}
                         </span>
                       </div>
@@ -559,15 +557,15 @@ const App = () => {
         onConfirm={inputModal.onConfirm}
         onCancel={() => setInputModal({ show: false, title: '', defaultValue: '', onConfirm: null })}
       />
-      <WelcomeModal 
-        show={showWelcomeModal} 
+      <WelcomeModal
+        show={showWelcomeModal}
         onNewProgram={() => {
           setShowWelcomeModal(false);
           promptForNewProgram();
         }}
         onClose={() => setShowWelcomeModal(false)}
       />
-      <FloatingButtons 
+      <FloatingButtons
         currentProgram={currentProgram}
         handleUpdateCurrentProgram={handleUpdateCurrentProgram}
         autoSaveStatus={autoSaveStatus}

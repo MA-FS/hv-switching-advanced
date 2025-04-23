@@ -4,7 +4,7 @@ import '../styles.css';
 
 const InfoForm = ({ formData, handleChange }) => (
   <div className="info-container">
-    <div className="header">
+    <div className="form-top-section">
       <div className="title-section">
         <h2 className="static-title">HV Coach SWITCHING PROGRAM</h2>
       </div>
