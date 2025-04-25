@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/hv-switching-advanced/static/css/main.2d3cc346.css",
-    "main.js": "/hv-switching-advanced/static/js/main.5962baa2.js",
+    "main.js": "/hv-switching-advanced/static/js/main.db2585e7.js",
     "static/js/239.bb8a80c9.chunk.js": "/hv-switching-advanced/static/js/239.bb8a80c9.chunk.js",
     "static/js/213.3ad6c99d.chunk.js": "/hv-switching-advanced/static/js/213.3ad6c99d.chunk.js",
     "static/js/732.dfb8d6ed.chunk.js": "/hv-switching-advanced/static/js/732.dfb8d6ed.chunk.js",
@@ -14,13 +14,13 @@
     "static/media/glyphicons-halflings-regular.woff2": "/hv-switching-advanced/static/media/glyphicons-halflings-regular.be810be3a3e14c682a25.woff2",
     "index.html": "/hv-switching-advanced/index.html",
     "main.2d3cc346.css.map": "/hv-switching-advanced/static/css/main.2d3cc346.css.map",
-    "main.5962baa2.js.map": "/hv-switching-advanced/static/js/main.5962baa2.js.map",
+    "main.db2585e7.js.map": "/hv-switching-advanced/static/js/main.db2585e7.js.map",
     "239.bb8a80c9.chunk.js.map": "/hv-switching-advanced/static/js/239.bb8a80c9.chunk.js.map",
     "213.3ad6c99d.chunk.js.map": "/hv-switching-advanced/static/js/213.3ad6c99d.chunk.js.map",
     "732.dfb8d6ed.chunk.js.map": "/hv-switching-advanced/static/js/732.dfb8d6ed.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2d3cc346.css",
-    "static/js/main.5962baa2.js"
+    "static/js/main.db2585e7.js"
   ]
 }
