@@ -36,15 +36,15 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
 
       // Determine rectangle on screen
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      
+
       // Get vertical middle
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-      
+
       // Add a buffer zone (hysteresis) of 10% around the middle point to prevent flickering
       const bufferSize = (hoverBoundingRect.bottom - hoverBoundingRect.top) * 0.1;
       const upperThreshold = hoverMiddleY + bufferSize;
       const lowerThreshold = hoverMiddleY - bufferSize;
-      
+
       // Determine mouse position
       const clientOffset = monitor.getClientOffset();
       // Get pixels to the top
@@ -79,12 +79,13 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       // This is called when the item is dropped ON this component
       const dragIndex = item.originalIndex; // Use the original index captured when drag started
       const hoverIndex = originalIndex; // The index of the drop target (use originalIndex)
+      const isReverseBlock = item.isReverseBlock || false; // Check if we're dragging a reverse block
 
       if (dragIndex === hoverIndex) {
         return; // No change
       }
       // Perform the actual move
-      moveRow(dragIndex, hoverIndex);
+      moveRow(dragIndex, hoverIndex, isReverseBlock);
       // item.index is likely reset implicitly when drag ends, or could be reset here if needed.
     },
     canDrop: (item, monitor) => {
@@ -96,12 +97,23 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
   // *** useDrag modifications ***
   const [{ isDragging }, drag] = useDrag({
     type: ItemType,
-    item: () => ({ index: originalIndex, originalIndex }), // Pass originalIndex
+    item: () => ({
+      index: originalIndex,
+      originalIndex,
+      isReverseBlock: isReverseSection && isReverseRow && rowInReverseBlock === 1
+    }), // Pass originalIndex and whether this is a reverse block
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    // Removed 'end' handler as move is now done only on drop
-    canDrag: () => !isReverseSection,
+    // Allow dragging the reverse block when the drag handle is clicked
+    canDrag: () => {
+      // Allow dragging if it's the reverse block header row (middle row with REVERSE text)
+      if (isReverseSection && isReverseRow && rowInReverseBlock === 1) {
+        return true;
+      }
+      // Otherwise, don't allow dragging reverse section rows
+      return !isReverseSection;
+    },
   });
 
   // Only apply drag to the handle, and drop to the whole row
@@ -116,18 +128,35 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
     onClick(originalIndex); // Use originalIndex
   };
 
-  // Handle reverse rows (unchanged)
+  // Handle reverse rows
   if (isReverseSection && isReverseRow) {
+    // Add classes for visual feedback during dragging
+    const reverseRowClasses = [
+      'reverse-row',
+      isDragging ? 'dragging-row' : '', // Class for the row being dragged
+      isOver && canDrop ? 'drop-target-highlight' : '' // Class for the row being hovered over
+    ].filter(Boolean).join(' ');
+
     return (
       <tr
         ref={ref}
-        className="reverse-row"
+        className={reverseRowClasses}
         onClick={handleRowClick}
         data-handler-id={handlerId} // Add handlerId
       >
         <td colSpan="10" className="reverse-cell">
           <div className="reverse-divider">
-            <span className="reverse-text">REVERSE</span>
+            {/* Add drag handle for the reverse block */}
+            {showDeleteButton && (
+              <div
+                ref={dragHandleRef}
+                className="reverse-drag-handle"
+                title="Drag to reorder the entire reverse section"
+              >
+                <i className="bi bi-grip-vertical"></i>
+              </div>
+            )}
+            <span className="reverse-text">REVERSE SECTION</span>
             {showDeleteButton && (
               <button
                 className="btn btn-link p-0 delete-reverse-btn"
@@ -164,8 +193,8 @@ const DraggableRow = React.memo(({ row, index, moveRow, handleInputChange, delet
       <td className="item-column">
         {!isReverseSection && (
           <div className="step-container">
-            <div 
-              ref={dragHandleRef} 
+            <div
+              ref={dragHandleRef}
               className="drag-handle"
               title="Drag to reorder"
             >
@@ -232,7 +261,7 @@ const ResizableHeader = ({ children, width, onResize }) => {
 };
 
 const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError }) => {
-  const [rows, setRows] = useState(tableData);  
+  const [rows, setRows] = useState(tableData);
   const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const [lastNumberedIndex, setLastNumberedIndex] = useState(-1);
@@ -342,7 +371,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
     if (internalChangeRef.current) {
         console.log("Internal change detected. Resetting flag and skipping history check.");
         internalChangeRef.current = false; // Reset the flag HERE
-    } 
+    }
     // Only process if the change wasn't flagged as internal
     else {
         // Check if the external data is actually different from the last known external data
@@ -352,7 +381,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           setHistoryIndex(0);                // Reset history index
           previousTableDataRef.current = currentTableDataString; // Update the ref
           // Sync local rows state ONLY when external data changes
-          setRows(tableData); 
+          setRows(tableData);
         } else {
           // External change, but data same as previous. Do nothing in this effect.
           console.log("External change detected, but data is the same as previous. No action needed in tableData effect.");
@@ -503,51 +532,51 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
       // Don't allow inserting rows into the reverse section
       return;
     }
-    
+
     // Get the position of the mouse cursor
     const x = event.clientX;
     const y = event.clientY;
-    
+
     // Get window dimensions
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    
+
     // Determine if we should use horizontal or vertical layout
     // If window is too narrow, use vertical layout
     const useVerticalLayout = windowWidth < 550;
-    
+
     // Calculate popup dimensions (approximate)
     const popupWidth = useVerticalLayout ? 180 : 380; // wider for horizontal layout
     const popupHeight = useVerticalLayout ? 220 : 120; // shorter for horizontal layout
-    
+
     // Determine the best position strategy
     let positionStrategy = 'top'; // default: show above click point
-    
+
     // Check if popup would go off the top edge
     if (y - popupHeight < 0) {
       positionStrategy = 'bottom'; // show below click point
     }
-    
+
     // Set initial position values
     let adjustedX = x;
     let adjustedY = y;
     let transform = 'translate(-50%, -100%)'; // default transform for top position
-    
+
     // Check if popup would go off the right edge
     if (x + popupWidth / 2 > windowWidth) {
       adjustedX = windowWidth - popupWidth / 2 - 10;
     }
-    
+
     // Check if popup would go off the left edge
     if (x - popupWidth / 2 < 0) {
       adjustedX = popupWidth / 2 + 10;
     }
-    
+
     // Apply position strategy
     if (positionStrategy === 'bottom') {
       transform = 'translate(-50%, 10px)';
     }
-    
+
     setInsertPopupPosition({
       x: adjustedX,
       y: adjustedY,
@@ -555,7 +584,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
       strategy: positionStrategy,
       useVerticalLayout: useVerticalLayout
     });
-    
+
     setClickedRowIndex(index);
     setShowInsertPopup(true);
   };
@@ -609,7 +638,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
     // setTableData is handled by the useEffect hook watching 'rows'
   };
 
-  const moveRow = useCallback((dragIndex, hoverIndex) => {
+  const moveRow = useCallback((dragIndex, hoverIndex, isReverseBlock = false) => {
     // Ensure indices are valid and different
     if (dragIndex === hoverIndex || dragIndex < 0 || hoverIndex < 0) {
       console.warn("Attempted invalid move: indices out of bounds or same", dragIndex, hoverIndex);
@@ -622,11 +651,6 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
       if (dragIndex >= prevRows.length || hoverIndex >= prevRows.length) {
           console.warn("Attempted invalid move inside setRows: indices out of bounds", dragIndex, hoverIndex, prevRows.length);
           return prevRows; // Return current state if indices became invalid
-      }
-       // Check if moving involves a reverse block (double check)
-      if (prevRows[dragIndex]?.isReverseBlock || prevRows[hoverIndex]?.isReverseBlock) {
-        console.warn("Attempted move involving reverse block inside setRows:", dragIndex, hoverIndex);
-        return prevRows; // Return current state
       }
 
       const newRows = [...prevRows];
@@ -694,14 +718,14 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
       const exportToPDFFunction = async () => {
         try {
           console.log('Starting PDF export process...');
-          
+
           const doc = new jsPDF('landscape', 'mm', 'a4');
           const pageWidth = doc.internal.pageSize.width;
           const pageHeight = doc.internal.pageSize.height;
           const margin = 8;
           const copperColor = [168, 75, 42]; // Copper tone color (#A84B2A)
           const logoSize = 15;
-          
+
           // Verify table data is available
           if (!rows || rows.length === 0) {
             console.warn('No rows data available for PDF export');
@@ -710,12 +734,12 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           }
 
           // Load logo
-          const logoUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://ma-fs.github.io/hv-switching-advanced/logo.png' 
+          const logoUrl = process.env.NODE_ENV === 'production'
+            ? 'https://ma-fs.github.io/hv-switching-advanced/logo.png'
             : process.env.PUBLIC_URL + '/logo.png';
-          
+
           console.log('Loading logo from:', logoUrl);
-          
+
           // Load image asynchronously
           let img;
           try {
@@ -760,9 +784,9 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             const esipacLogoUrl = process.env.NODE_ENV === 'production'
               ? 'https://ma-fs.github.io/hv-switching-advanced/esipac.jpg'
               : process.env.PUBLIC_URL + '/esipac.jpg';
-            
+
             console.log('Loading esipac logo from:', esipacLogoUrl);
-            
+
             esipacImg = await new Promise((resolve, reject) => {
               const image = new Image();
               image.crossOrigin = "Anonymous";
@@ -856,7 +880,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               pageHeight - margin,
               { align: 'center' }
             );
-            
+
             // Add esipac logo if it was loaded
             if (esipacImg) {
               try {
@@ -864,14 +888,14 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                 const footerLogoSize = 8;
                 const aspectRatio = esipacImg.width / esipacImg.height;
                 const footerLogoWidth = footerLogoSize * aspectRatio;
-                
+
                 // Add the image to the PDF
                 doc.addImage(
-                  esipacImg, 
-                  'JPEG', 
-                  margin, 
-                  pageHeight - margin - footerLogoSize, 
-                  footerLogoWidth, 
+                  esipacImg,
+                  'JPEG',
+                  margin,
+                  pageHeight - margin - footerLogoSize,
+                  footerLogoWidth,
                   footerLogoSize
                 );
                 console.log(`Added esipac logo to footer on page ${pageNumber}`);
@@ -970,42 +994,42 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
           // Main switching program table
           const tableStartY = doc.lastAutoTable.finalY + 3;
-          
+
           // Process table data
           const tableRows = [];
           let itemNumber = 1;
-          
+
           console.log('Raw rows data for current PDF export:', JSON.stringify(rows, null, 2));
-          
+
           // Add this validation function
           const validateTableRow = (row) => {
             if (!Array.isArray(row)) {
               console.error('Invalid row format (not an array):', row);
               return false;
             }
-            
+
             // Check if the row has the right number of columns
             // Step column + all data columns
             const expectedLength = 1 + columns.length;
-            
+
             if (row.length !== expectedLength) {
               console.error(`Row has wrong number of columns: expected ${expectedLength}, got ${row.length}`, row);
               return false;
             }
-            
+
             return true;
           };
-          
+
           // Process row data for PDF
           const processRowForPDF = (row) => {
             // Ensure we have data to work with
             if (!row) return null;
-            
+
             // Regular rows are arrays with values
             if (Array.isArray(row)) {
               return [...row]; // Return a copy of the array
             }
-            
+
             // If it's an object with specific properties we need to extract
             if (typeof row === 'object') {
               try {
@@ -1017,7 +1041,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   }
                   return extractedArray;
                 }
-                
+
                 // Otherwise extract by column names
                 const extracted = columns.map(col => row[col] || '');
                 return extracted;
@@ -1026,12 +1050,12 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                 return Array(columns.length).fill('');
               }
             }
-            
+
             // Fallback
             console.error('Unhandled row format:', row);
             return Array(columns.length).fill('');
           };
-          
+
           // Process the rows for PDF export
           rows.forEach((rowData, index) => {
             // Handle each row type appropriately
@@ -1044,15 +1068,15 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                     if (processedRow) {
                       const formattedRow = ['', ...processedRow];
                       if (rowIndex === 1) { // Middle row with REVERSE text
-                        formattedRow[6] = { 
-                          content: 'REVERSE', 
-                          styles: { 
-                            fontStyle: 'bold', 
+                        formattedRow[6] = {
+                          content: 'REVERSE',
+                          styles: {
+                            fontStyle: 'bold',
                             textColor: [220, 53, 69],
                             decoration: 'underline',
                             cellPadding: 4,
                             halign: 'center'
-                          } 
+                          }
                         };
                       }
                       tableRows.push(formattedRow);
@@ -1076,35 +1100,35 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
           // Debug the processed tableRows
           console.log('Processed tableRows for PDF:', tableRows);
-          
+
           // Additional validation before adding to PDF
           const validRows = tableRows.filter(validateTableRow);
           if (validRows.length < tableRows.length) {
             console.warn(`Filtered out ${tableRows.length - validRows.length} invalid rows`);
           }
-          
+
           if (validRows.length === 0) {
             console.error('No valid rows for PDF export, using sample data');
             // Create a sample row for debugging
             validRows.push(['1', 'Operator', 'Location', 'kV', 'Type', 'Label', 'Instruction', 'Time', 'Initial']);
           }
-          
+
           console.log(`Final ${validRows.length} rows ready for PDF`);
 
           // Calculate available height for table content
           const firstPageContentHeight = pageHeight - tableStartY - margin;
           const subsequentPagesContentHeight = pageHeight - (margin + 15) - margin; // Account for header and margins
-          
+
           // Calculate approximate rows per page based on row height
           const rowHeight = 10; // Reduced from 12 - approximate height of each row in mm
           const firstPageRows = Math.floor(firstPageContentHeight / rowHeight);
           const subsequentPagesRows = Math.floor(subsequentPagesContentHeight / rowHeight);
-          
+
           // Calculate total pages more accurately
           let remainingRows = validRows.length;
           let calculatedTotalPages = 1;
           remainingRows -= firstPageRows;
-          
+
           while (remainingRows > 0) {
             calculatedTotalPages++;
             remainingRows -= subsequentPagesRows;
@@ -1117,7 +1141,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           try {
             // Add the table to the PDF
             console.log('Adding main program table to PDF...');
-            
+
             // Ensure all cell values are strings to prevent jsPDF autoTable issues
             const sanitizedRows = validRows.map(row => {
               return row.map(cell => {
@@ -1129,7 +1153,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                 return String(cell || '');
               });
             });
-            
+
             autoTable(doc, {
               head: [
                 [
@@ -1178,7 +1202,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   // Clear the header area
                   doc.setFillColor(255, 255, 255);
                   doc.rect(0, 0, pageWidth, margin + 20, 'F');
-                  
+
                   // Add header with exact same spacing as first page
                   if (img) {
                     try {
@@ -1215,7 +1239,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   doc.text("Program No:", pageWidth - 120, nameY + 5);
                   doc.text(formData.programNo || '', pageWidth - 80, nameY + 5);
                 }
-                
+
                 // Add page number (for all pages)
                 doc.setFontSize(10);
                 doc.setTextColor(0);
@@ -1226,7 +1250,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   pageHeight - margin,
                   { align: 'right' }
                 );
-                
+
                 // Add branding footer to each page (using synchronous function)
                 addFooter(data.pageNumber);
               },
@@ -1274,7 +1298,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           }
         }
       };
-      
+
       onExportPDF(exportToPDFFunction);
     }
   }, [onExportPDF, rows, formData, columns, onError]); // Include all dependencies
@@ -1294,7 +1318,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div 
+      <div
         className="spreadsheet-container p-3"
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -1312,12 +1336,12 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
           if (distance > touchThreshold) {
             setIsScrolling(true);
-            
+
             // Clear any existing timeout
             if (scrollTimeoutRef.current) {
               clearTimeout(scrollTimeoutRef.current);
             }
-            
+
             // Set a timeout to reset the scrolling state after a delay
             scrollTimeoutRef.current = setTimeout(() => {
               setIsScrolling(false);
@@ -1329,7 +1353,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
           }
-          
+
           // Set a timeout to reset the scrolling state after a delay
           scrollTimeoutRef.current = setTimeout(() => {
             setIsScrolling(false);
@@ -1339,12 +1363,12 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
         onWheel={(e) => {
           // Detect wheel scrolling
           setIsScrolling(true);
-          
+
           // Clear any existing timeout
           if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
           }
-          
+
           // Set a timeout to reset the scrolling state after a delay
           scrollTimeoutRef.current = setTimeout(() => {
             setIsScrolling(false);
@@ -1423,7 +1447,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             .reverse-section input:disabled {
               color: #E0E0E0;
             }
-            
+
             /* New styles for the redesigned reverse row */
             .reverse-row {
               background-color: transparent !important;
@@ -1468,6 +1492,29 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               color: #D84747;
               background-color: transparent;
               border: none;
+            }
+            /* Reverse drag handle styles */
+            .reverse-drag-handle {
+              cursor: move;
+              color: #C27E5F;
+              opacity: 0.8;
+              transition: all 0.2s;
+              border-radius: 3px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              width: 24px;
+              position: absolute;
+              left: 15px;
+            }
+            .reverse-drag-handle:hover {
+              opacity: 1;
+              background-color: rgba(194, 126, 95, 0.2);
+            }
+            .reverse-drag-handle .bi {
+              font-size: 1.4rem;
+              display: block;
             }
             .delete-reverse-btn:hover {
               color: #C53030;
@@ -1532,6 +1579,13 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                /* border-color: transparent !important; */
             }
 
+            /* Style for the reverse row being dragged */
+            .reverse-row.dragging-row .reverse-divider {
+              background-color: #444 !important;
+              border-color: #C27E5F !important;
+              box-shadow: 0 0 10px rgba(194, 126, 95, 0.3) !important;
+            }
+
             /* Style for the row being hovered over as a drop target */
             .drop-target-highlight {
               /* Using borders for the highlight */
@@ -1552,7 +1606,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                  border-right: 1px solid #222222; /* Maintain original border */
             }
 
-            /* Prevent highlighting styles on reverse sections */
+            /* Prevent highlighting styles on reverse sections that are drop targets */
             .reverse-section.drop-target-highlight,
             .reverse-row.drop-target-highlight {
                 border-top: none !important;
@@ -1563,8 +1617,15 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                  border-top-color: #222222 !important; /* Restore default border */
                  border-bottom-color: #222222 !important;
             }
+
+            /* Special highlight for when a row is being dragged over and can be dropped */
+            tr:not(.reverse-section):not(.reverse-row).drop-target-highlight {
+                border-top: 2px solid #C27E5F !important;
+                border-bottom: 2px solid #C27E5F !important;
+                background-color: rgba(194, 126, 95, 0.1) !important;
+            }
              /* --- End Drag and Drop Styles --- */
-             
+
             /* Drag handle styles */
             .drag-handle {
               cursor: move;
@@ -1660,7 +1721,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             }
             .btn:disabled .bi {
                /* Ensure icon opacity matches button opacity */
-              opacity: inherit; 
+              opacity: inherit;
             }
             /* --- End Custom Button Styles --- */
           `}
@@ -1668,10 +1729,10 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
         <div className="header-section">
           {/* Header content here */}
         </div>
-        <div 
-          id="table-container" 
+        <div
+          id="table-container"
           className="table-container"
-          style={{ 
+          style={{
             userSelect: isDraggingGlobal ? 'none' : 'auto',
             WebkitUserSelect: isDraggingGlobal ? 'none' : 'auto',
             MozUserSelect: isDraggingGlobal ? 'none' : 'auto',
@@ -1752,7 +1813,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               })}
             </tbody>
           </table>
-          
+
           {/* Insert popup */}
           {showInsertPopup && clickedRowIndex !== null && (
             <div
@@ -1785,34 +1846,34 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               {insertPopupPosition.useVerticalLayout ? (
                 <>
                   <span className="popup-title">Insert</span>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       insertRowAbove(clickedRowIndex);
-                    }} 
+                    }}
                     className="btn btn-outline-primary btn-sm my-1"
                   >
                     <i className="bi bi-arrow-up"></i> Above
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       insertRowBelow(clickedRowIndex);
-                    }} 
+                    }}
                     className="btn btn-outline-primary btn-sm my-1"
                   >
                     <i className="bi bi-arrow-down"></i> Below
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       copyCurrentRow(clickedRowIndex);
-                    }} 
+                    }}
                     className="btn btn-outline-primary btn-sm my-1"
                   >
                     <i className="bi bi-files"></i> Duplicate
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setClickedRowIndex(null);
                       setShowInsertPopup(false);
@@ -1825,34 +1886,34 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
               ) : (
                 <>
                   <span className="popup-title mr-2">Insert Row:</span>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       insertRowAbove(clickedRowIndex);
-                    }} 
+                    }}
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-arrow-up"></i> Above
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       insertRowBelow(clickedRowIndex);
-                    }} 
+                    }}
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-arrow-down"></i> Below
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       copyCurrentRow(clickedRowIndex);
-                    }} 
+                    }}
                     className="btn btn-outline-primary btn-sm mx-1"
                   >
                     <i className="bi bi-files"></i> Duplicate
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setClickedRowIndex(null);
                       setShowInsertPopup(false);
@@ -1867,7 +1928,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           )}
         </div>
         <div className="button-container">
-          <button 
+          <button
             className="btn btn-custom-secondary"
             onClick={handleUndo}
             disabled={historyIndex <= 0}
@@ -1889,7 +1950,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
           <button className="btn btn-custom-secondary" onClick={copyFromAbove} title="Copy the last row and add it as a new row">
             <i className="bi bi-clipboard-plus"></i> Copy Above
           </button>
-          <button 
+          <button
             className="btn btn-custom-secondary"
             onClick={addReverseSection}
             disabled={hasReverseSection}
