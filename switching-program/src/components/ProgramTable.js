@@ -844,7 +844,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             // Add title
             doc.setFontSize(14);
             doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-            doc.text("HV Switching Program", margin + logoSize + 3, margin + 6);
+            doc.text("HV SWITCHING PROGRAM", margin + logoSize + 3, margin + 6);
 
             // Add name and program number
             doc.setFontSize(9);
@@ -1245,7 +1245,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   // Add title with exact same spacing as first page
                   doc.setFontSize(14);
                   doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-                  doc.text("HV Switching Program", margin + logoSize + 3, margin + 6);
+                  doc.text("HV SWITCHING PROGRAM", margin + logoSize + 3, margin + 6);
 
                   // Add name and program number with exact same spacing as first page
                   doc.setFontSize(9);
