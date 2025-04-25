@@ -844,8 +844,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
             // Add title
             doc.setFontSize(14);
             doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-            // doc.text("HV Coach", margin + logoSize + 3, margin + 6);
-            doc.text("HV SWITCHING PROGRAM", margin + logoSize + 40, margin + 6);
+            doc.text("HV Switching Program", margin + logoSize + 3, margin + 6);
 
             // Add name and program number
             doc.setFontSize(9);
@@ -871,14 +870,33 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
 
           // Function to add footer with branding
           const addFooter = (pageNumber) => {
-            // Add website URL
+            // Add website URL with hyperlink
+            const websiteUrl = "hvcoach.com";
+            const urlX = pageWidth / 2;
+            const urlY = pageHeight - margin;
+
+            // Set up the hyperlink
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100); // Gray color for footer text
+
+            // Add the text
             doc.text(
-              "https://www.hv.coach/",
-              pageWidth / 2,
-              pageHeight - margin,
+              websiteUrl,
+              urlX,
+              urlY,
               { align: 'center' }
+            );
+
+            // Calculate text width to determine link area
+            const textWidth = doc.getTextWidth(websiteUrl);
+
+            // Add the hyperlink - using the text width to define the clickable area
+            doc.link(
+              urlX - (textWidth / 2), // X position (centered)
+              urlY - 5, // Y position (slightly above text to create larger clickable area)
+              textWidth, // Width of the link area
+              8, // Height of the link area
+              { url: `https://www.hv.coach/` } // URL to open when clicked
             );
 
             // Add esipac logo if it was loaded
@@ -1227,8 +1245,7 @@ const ProgramTable = ({ tableData, setTableData, formData, onExportPDF, onError 
                   // Add title with exact same spacing as first page
                   doc.setFontSize(14);
                   doc.setTextColor(copperColor[0], copperColor[1], copperColor[2]);
-                  doc.text("HV Coach", margin + logoSize + 3, margin + 6);
-                  doc.text("SWITCHING PROGRAM", margin + logoSize + 40, margin + 6);
+                  doc.text("HV Switching Program", margin + logoSize + 3, margin + 6);
 
                   // Add name and program number with exact same spacing as first page
                   doc.setFontSize(9);
