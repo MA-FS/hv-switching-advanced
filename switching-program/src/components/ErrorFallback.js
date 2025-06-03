@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import '../styles.css';
 
 /**
@@ -39,14 +40,38 @@ const ErrorFallback = ({
       url: window.location.href
     };
 
+    const reportText = JSON.stringify(errorReport, null, 2);
+
     try {
-      await navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2));
+      // Check for clipboard API support
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API not available');
+      }
+
+      await navigator.clipboard.writeText(reportText);
       setReportSent(true);
       setTimeout(() => setReportSent(false), 3000);
     } catch (clipboardError) {
       console.warn('Failed to copy error report to clipboard:', clipboardError);
-      // Fallback: show error details in alert
-      alert(`Error Report (ID: ${errorId}):\n\n${JSON.stringify(errorReport, null, 2)}`);
+
+      // Fallback: Create a text area and copy manually
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = reportText;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        setReportSent(true);
+        setTimeout(() => setReportSent(false), 3000);
+      } catch (fallbackError) {
+        console.error('Fallback copy method also failed:', fallbackError);
+        // Final fallback: show error details in alert
+        alert(`Error Report (ID: ${errorId}):\n\n${reportText}`);
+      }
     }
   };
 
@@ -100,7 +125,7 @@ const ErrorFallback = ({
     const baseStyle = {
       backgroundColor: 'var(--bg-dark)',
       color: 'var(--off-white)',
-      border: '2px solid var(--error-color, #dc3545)',
+      border: '2px solid var(--danger)',
       borderRadius: '8px',
       padding: '20px',
       margin: '10px 0',
@@ -134,23 +159,25 @@ const ErrorFallback = ({
   const suggestions = getRecoverySuggestions();
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} role="alert" aria-live="polite">
       <div style={{ marginBottom: '20px' }}>
-        <i 
-          className="bi bi-exclamation-triangle-fill" 
-          style={{ 
-            fontSize: fallbackType === 'inline' ? '1.5rem' : '3rem', 
-            color: 'var(--error-color, #dc3545)',
+        <i
+          className="bi bi-exclamation-triangle-fill"
+          aria-hidden="true"
+          style={{
+            fontSize: fallbackType === 'inline' ? '1.5rem' : '3rem',
+            color: 'var(--danger)',
             marginBottom: '10px',
             display: 'block'
           }}
         ></i>
-        
-        <h3 style={{ 
-          color: 'var(--error-color, #dc3545)', 
+
+        <h3 style={{
+          color: 'var(--danger)',
           marginBottom: '10px',
           fontSize: fallbackType === 'inline' ? '1.1rem' : '1.5rem'
         }}>
+          <span className="sr-only">Error: </span>
           Something went wrong
         </h3>
         
@@ -189,32 +216,35 @@ const ErrorFallback = ({
         marginBottom: '15px'
       }}>
         {onRetry && (
-          <button 
+          <button
             className="btn btn-primary"
             onClick={onRetry}
             style={{ minWidth: '100px' }}
+            aria-label="Retry the failed operation"
           >
-            <i className="bi bi-arrow-clockwise"></i> Try Again
+            <i className="bi bi-arrow-clockwise" aria-hidden="true"></i> Try Again
           </button>
         )}
         
         {onRefreshSection && fallbackType !== 'full' && (
-          <button 
+          <button
             className="btn btn-secondary"
             onClick={onRefreshSection}
             style={{ minWidth: '100px' }}
+            aria-label="Refresh this section to recover from the error"
           >
-            <i className="bi bi-arrow-repeat"></i> Refresh Section
+            <i className="bi bi-arrow-repeat" aria-hidden="true"></i> Refresh Section
           </button>
         )}
         
         {fallbackType === 'full' && (
-          <button 
+          <button
             className="btn btn-secondary"
-            onClick={() => window.location.reload()}
+            onClick={onReloadPage || (() => window.location.reload())}
             style={{ minWidth: '100px' }}
+            aria-label="Reload the entire page to recover from the error"
           >
-            <i className="bi bi-arrow-repeat"></i> Reload Page
+            <i className="bi bi-arrow-repeat" aria-hidden="true"></i> Reload Page
           </button>
         )}
       </div>
@@ -279,6 +309,22 @@ const ErrorFallback = ({
       )}
     </div>
   );
+};
+
+ErrorFallback.propTypes = {
+  error: PropTypes.object,
+  errorInfo: PropTypes.object,
+  errorId: PropTypes.string,
+  fallbackType: PropTypes.oneOf(['full', 'section', 'inline']),
+  componentName: PropTypes.string,
+  onRetry: PropTypes.func,
+  onRefreshSection: PropTypes.func,
+  onReloadPage: PropTypes.func
+};
+
+ErrorFallback.defaultProps = {
+  fallbackType: 'section',
+  componentName: 'Component'
 };
 
 export default ErrorFallback;

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import ErrorFallback from './ErrorFallback';
 
 /**
@@ -82,10 +83,17 @@ class ErrorBoundary extends React.Component {
     // Log to console for development
     console.error('Error Boundary caught an error:', errorLog);
 
-    // Store in localStorage for debugging (with size limit)
+    // Store in localStorage for debugging (with size limit and TTL)
     try {
       const existingLogs = JSON.parse(localStorage.getItem('hvSwitchingErrorLogs') || '[]');
-      const updatedLogs = [errorLog, ...existingLogs].slice(0, 50); // Keep last 50 errors
+
+      // Filter out logs older than 7 days
+      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const recentLogs = existingLogs.filter(log =>
+        new Date(log.timestamp).getTime() > sevenDaysAgo
+      );
+
+      const updatedLogs = [errorLog, ...recentLogs].slice(0, 50); // Keep last 50 recent errors
       localStorage.setItem('hvSwitchingErrorLogs', JSON.stringify(updatedLogs));
     } catch (storageError) {
       console.warn('Failed to store error log in localStorage:', storageError);
@@ -106,20 +114,22 @@ class ErrorBoundary extends React.Component {
 
   /**
    * Handles refresh section action from fallback UI
+   * Resets error state to attempt component recovery
    */
   handleRefreshSection = () => {
-    // Force component remount by updating key
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
       errorId: null
     });
-    
-    // Trigger a small delay to ensure clean state reset
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+  };
+
+  /**
+   * Handles full page reload action from fallback UI
+   */
+  handleReloadPage = () => {
+    window.location.reload();
   };
 
   render() {
@@ -127,6 +137,7 @@ class ErrorBoundary extends React.Component {
       // Render fallback UI
       return (
         <ErrorFallback
+          {...(this.props.fallbackProps || {})}
           error={this.state.error}
           errorInfo={this.state.errorInfo}
           errorId={this.state.errorId}
@@ -134,7 +145,7 @@ class ErrorBoundary extends React.Component {
           componentName={this.props.componentName || 'Component'}
           onRetry={this.handleRetry}
           onRefreshSection={this.handleRefreshSection}
-          {...(this.props.fallbackProps || {})}
+          onReloadPage={this.handleReloadPage}
         />
       );
     }
@@ -143,5 +154,19 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+  fallbackType: PropTypes.oneOf(['full', 'section', 'inline']),
+  componentName: PropTypes.string,
+  onError: PropTypes.func,
+  fallbackProps: PropTypes.object
+};
+
+ErrorBoundary.defaultProps = {
+  fallbackType: 'section',
+  componentName: 'Component',
+  fallbackProps: {}
+};
 
 export default ErrorBoundary;
