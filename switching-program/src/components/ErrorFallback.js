@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import '../styles.css';
 
@@ -14,6 +14,7 @@ import '../styles.css';
  * @param {string} props.componentName - Name of the component that failed
  * @param {Function} props.onRetry - Callback to retry the failed operation
  * @param {Function} props.onRefreshSection - Callback to refresh the section
+ * @param {Function} props.onReloadPage - Callback to reload the entire page
  */
 const ErrorFallback = ({
   error,
@@ -22,10 +23,21 @@ const ErrorFallback = ({
   fallbackType = 'section',
   componentName = 'Component',
   onRetry,
-  onRefreshSection
+  onRefreshSection,
+  onReloadPage
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [reportSent, setReportSent] = useState(false);
+  const timeoutRef = useRef(null);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   /**
    * Handles error reporting - copies error details to clipboard
@@ -50,7 +62,7 @@ const ErrorFallback = ({
 
       await navigator.clipboard.writeText(reportText);
       setReportSent(true);
-      setTimeout(() => setReportSent(false), 3000);
+      timeoutRef.current = setTimeout(() => setReportSent(false), 3000);
     } catch (clipboardError) {
       console.warn('Failed to copy error report to clipboard:', clipboardError);
 
@@ -60,13 +72,21 @@ const ErrorFallback = ({
         textArea.value = reportText;
         textArea.style.position = 'fixed';
         textArea.style.opacity = '0';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
         document.body.appendChild(textArea);
         textArea.select();
-        document.execCommand('copy');
+        textArea.setSelectionRange(0, 99999); // For mobile devices
+
+        const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
 
+        if (!successful) {
+          throw new Error('Copy command failed');
+        }
+
         setReportSent(true);
-        setTimeout(() => setReportSent(false), 3000);
+        timeoutRef.current = setTimeout(() => setReportSent(false), 3000);
       } catch (fallbackError) {
         console.error('Fallback copy method also failed:', fallbackError);
         // Final fallback: show error details in alert
@@ -159,7 +179,13 @@ const ErrorFallback = ({
   const suggestions = getRecoverySuggestions();
 
   return (
-    <div style={containerStyle} role="alert" aria-live="polite">
+    <div
+      style={containerStyle}
+      role="alert"
+      aria-live="polite"
+      aria-labelledby="error-heading"
+      aria-describedby="error-message"
+    >
       <div style={{ marginBottom: '20px' }}>
         <i
           className="bi bi-exclamation-triangle-fill"
@@ -172,19 +198,25 @@ const ErrorFallback = ({
           }}
         ></i>
 
-        <h3 style={{
-          color: 'var(--danger)',
-          marginBottom: '10px',
-          fontSize: fallbackType === 'inline' ? '1.1rem' : '1.5rem'
-        }}>
+        <h3
+          id="error-heading"
+          style={{
+            color: 'var(--danger)',
+            marginBottom: '10px',
+            fontSize: fallbackType === 'inline' ? '1.1rem' : '1.5rem'
+          }}
+        >
           <span className="sr-only">Error: </span>
           Something went wrong
         </h3>
-        
-        <p style={{ 
-          marginBottom: '15px',
-          fontSize: fallbackType === 'inline' ? '0.9rem' : '1rem'
-        }}>
+
+        <p
+          id="error-message"
+          style={{
+            marginBottom: '15px',
+            fontSize: fallbackType === 'inline' ? '0.9rem' : '1rem'
+          }}
+        >
           {errorMessage}
         </p>
       </div>
